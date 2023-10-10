@@ -44,7 +44,7 @@ SPEAKER_DIAGNOSTIC_ATTRIBUTES = (
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, _: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     payload: dict[str, Any] = {"current_timestamp": time.monotonic()}
@@ -64,7 +64,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, _: ConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     uid = next(

@@ -1,6 +1,7 @@
 """Test Discord notify."""
 import logging
 
+from discord import Colour
 import pytest
 
 from homeassistant.components.discord.notify import DiscordNotificationService
@@ -94,3 +95,60 @@ async def test_get_file_from_url_with_large_attachment_no_header(
     assert discord_aiohttp_mock.call_count == 1
     assert "Attachment too large (Stream reports" in caplog.text
     assert result is None
+
+
+async def test_empty_embedding_parsing(
+    discord_notification_service: DiscordNotificationService,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test getting file from URL with large attachment (per content length) throws error."""
+    with caplog.at_level(
+        logging.WARNING, logger="homeassistant.components.discord.notify"
+    ):
+        result = discord_notification_service.parse_embeddings({})
+
+    assert result == []
+
+
+async def test_full_embedding_parsing(
+    discord_notification_service: DiscordNotificationService,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test getting file from URL with large attachment (per content length) throws error."""
+    expected_title = "DiscordTitle"
+    expected_description = "DiscordDescritpion"
+    expected_color = 15
+    expected_url = "DiscordUrl"
+
+    expected_footer = {"text": "TextValue"}
+    expected_author = {"name": "NameValue"}
+    expected_thumbnail = {"url": "UrlValue1"}
+    expected_image = {"url": "UrlValue2"}
+
+    with caplog.at_level(
+        logging.WARNING, logger="homeassistant.components.discord.notify"
+    ):
+        result = discord_notification_service.parse_embeddings(
+            {
+                "embed": {
+                    "title": expected_title,
+                    "description": expected_description,
+                    "color": expected_color,
+                    "url": expected_url,
+                    "footer": expected_footer,
+                    "author": expected_author,
+                    "thumbnail": expected_thumbnail,
+                    "image": expected_image,
+                }
+            }
+        )[0]
+
+    assert result.title == expected_title
+    assert result.description == expected_description
+    assert result.color == Colour(expected_color)
+    assert result.url == expected_url
+
+    assert result.footer.text == expected_footer["text"]
+    assert result.author.name == expected_author["name"]
+    assert result.thumbnail.url == expected_thumbnail["url"]
+    assert result.image.url == expected_image["url"]
