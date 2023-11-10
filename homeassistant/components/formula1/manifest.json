@@ -1,0 +1,17 @@
+{
+  "domain": "formula1",
+  "name": "formula1",
+  "codeowners": [
+    "@Crypthead"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/formula1",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [
+    "Fast-F1==3.1.4"
+  ],
+  "ssdp": [],
+  "zeroconf": []
+}
