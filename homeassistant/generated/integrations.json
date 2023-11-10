@@ -409,7 +409,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "aseko_pool_live": {
+        "aseko_pool_live": {
       "name": "Aseko Pool Live",
       "integration_type": "hub",
       "config_flow": true,
@@ -1831,6 +1831,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "formula1": {
+      "name": "formula1",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "fortios": {
       "name": "FortiOS",

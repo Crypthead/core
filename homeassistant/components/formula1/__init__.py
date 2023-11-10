@@ -16,6 +16,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up formula1 from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
+
+    # Instantiate coordinator
+    # Instantiate calendar & event entities
+    # Save those somewhere so they could be unloaded
+
     # TODO 1. Create API instance
     # TODO 2. Validate the API connection (and authentication)
     # TODO 3. Store an API object for your platforms to access

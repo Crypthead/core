@@ -25,6 +25,9 @@ CO2Signal==0.4.2
 # homeassistant.components.doorbird
 DoorBirdPy==2.1.0
 
+# homeassistant.components.formula1
+fastf1==3.1.4
+
 # homeassistant.components.homekit
 HAP-python==4.7.1
 

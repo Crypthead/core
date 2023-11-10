@@ -149,6 +149,7 @@ FLOWS = {
         "flux_led",
         "forecast_solar",
         "forked_daapd",
+        "formula1",
         "foscam",
         "freebox",
         "freedompro",
