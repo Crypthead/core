@@ -409,7 +409,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-        "aseko_pool_live": {
+    "aseko_pool_live": {
       "name": "Aseko Pool Live",
       "integration_type": "hub",
       "config_flow": true,
