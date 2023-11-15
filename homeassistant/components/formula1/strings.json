@@ -2,10 +2,16 @@
   "config": {
     "step": {
       "user": {
+        "title": "Configure the integration",
+        "description": "Select what you are interested in",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "notify_driver_standings_changed": "Send an event when the driver standings change",
+          "notify_team_standings_changed": "Send an event when the team standings change",
+          "add_practice_events": "Add practice events to the calendar",
+          "add_qualification_events": "Add qualification events to the calendar",
+          "add_sprint_events": "Add sprint events to the calendar",
+          "add_sprint_shootout_events": "Add sprint shootout events to the calendar",
+          "add_race_events": "Add race events to the calendar"
         }
       }
     },
