@@ -77,18 +77,20 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                     and session_date + timedelta(hours=2) < end_date.date()
                 ):
                     event_summary = (
-                        str(race["RoundNumber"])
-                        + " "
-                        + str(race["Country"])
-                        + " "
-                        + str(race["EventName"])
-                        + " "
+                        str(race["EventName"])
+                        + ", "
                         + str(race["Session" + str(i + 1)])
+                        + ", "
+                        + str(race["RoundNumber"])
+                        + " rounds"
                     )
+
+                    event_location = str(race["Country"])
 
                     events.append(
                         CalendarEvent(
                             summary=event_summary,
+                            location=event_location,
                             start=session_date,
                             end=session_date + timedelta(hours=2),
                         )
@@ -125,15 +127,15 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                     and (event_start is None or session_date < event_start)
                 ):
                     event_start = session_date
+                    event_location = str(race["Country"])
 
                     event_summary = (
-                        str(race["RoundNumber"])
-                        + " "
-                        + str(race["Country"])
-                        + " "
-                        + str(race["EventName"])
-                        + " "
+                        str(race["EventName"])
+                        + ", "
                         + str(race["Session" + str(i + 1)])
+                        + ", "
+                        + str(race["RoundNumber"])
+                        + " rounds"
                     )
 
                     break
@@ -141,6 +143,7 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         if event_start is not None and event_summary is not None:
             self._event = CalendarEvent(
                 summary=event_summary,
+                location=event_location,
                 start=event_start,
                 end=event_start + timedelta(hours=2),
             )
