@@ -1,6 +1,7 @@
 """Support for F1 Calendar."""
 
 from datetime import datetime
+import logging
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +11,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import F1Coordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 # Need to
 # 1. Get data from coordinator
@@ -50,7 +53,6 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Return calendar events within a datetime range."""
         events: list[CalendarEvent] = []
 
-        # schedule = self.coordinator.data
         # # GET ALL EVENTS BETWEEN START AND END DATE
         # for _, race in schedule.iterrows():
         #     session_dates = race[
@@ -105,6 +107,7 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         #         ]
         #     ]
 
+        # TO-DO Do session_date.to_pydatetime() >= dt_util.now()
         #     for i, session_date in enumerate(session_dates.values):
         #         if session_date >= dt_util.now().date() and (
         #             session_date < event_start or event_start is None
