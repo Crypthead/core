@@ -1,15 +1,21 @@
 """Support for F1 Calendar."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
+import logging
+
+import pandas as pd
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import F1Coordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 # Need to
 # 1. Get data from coordinator
@@ -32,7 +38,7 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:delete-empty"
-    _attr_name = None
+    _attr_name = "Formula 1"
 
     def __init__(self, coordinator: F1Coordinator, entry: ConfigEntry) -> None:
         """Pass coordinator to CoordinatorEntity."""
@@ -50,41 +56,43 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Return calendar events within a datetime range."""
         events: list[CalendarEvent] = []
 
-        # schedule = self.coordinator.data
-        # # GET ALL EVENTS BETWEEN START AND END DATE
-        # for _, race in schedule.iterrows():
-        #     session_dates = race[
-        #         [
-        #             "Session1DateUtc",
-        #             "Session2DateUtc",
-        #             "Session3DateUtc",
-        #             "Session4DateUtc",
-        #             "Session5DateUtc",
-        #         ]
-        #     ]
+        schedule = self.coordinator.data
+        # GET ALL EVENTS BETWEEN START AND END DATE
+        for _, race in schedule.iterrows():
+            session_dates = race[
+                [
+                    "Session1DateUtc",
+                    "Session2DateUtc",
+                    "Session3DateUtc",
+                    "Session4DateUtc",
+                    "Session5DateUtc",
+                ]
+            ]
 
-        #     for i, session_date in enumerate(session_dates.values):
-        #         if (
-        #             session_date >= start_date
-        #             and session_date + timedelta(hours=2) < end_date
-        #         ):
-        #             event_summary = (
-        #                 str(race["RoundNumber"])
-        #                 + " "
-        #                 + str(race["Country"])
-        #                 + " "
-        #                 + str(race["EventName"])
-        #                 + " "
-        #                 + str(race["Session" + str(i + 1)])
-        #             )
+            for i, session_ts in enumerate(session_dates.values):
+                session_date = session_ts.date()
+                if (
+                    not pd.isnull(session_ts)
+                    and session_date >= start_date.date()
+                    and session_date + timedelta(hours=2) < end_date.date()
+                ):
+                    event_summary = (
+                        str(race["RoundNumber"])
+                        + " "
+                        + str(race["Country"])
+                        + " "
+                        + str(race["EventName"])
+                        + " "
+                        + str(race["Session" + str(i + 1)])
+                    )
 
-        #             events.append(
-        #                 CalendarEvent(
-        #                     summary=event_summary,
-        #                     start=session_date,
-        #                     end=session_date + timedelta(hours=2),
-        #                 )
-        #             )
+                    events.append(
+                        CalendarEvent(
+                            summary=event_summary,
+                            start=session_date,
+                            end=session_date + timedelta(hours=2),
+                        )
+                    )
 
         return events
 
@@ -93,42 +101,49 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Handle updated data from the coordinator."""
 
         # FIND NEXT UPCOMING RACE
+        schedule = self.coordinator.data
 
-        # for _, race in schedule.iterrows():
-        #     session_dates = race[
-        #         [
-        #             "Session1DateUtc",
-        #             "Session2DateUtc",
-        #             "Session3DateUtc",
-        #             "Session4DateUtc",
-        #             "Session5DateUtc",
-        #         ]
-        #     ]
+        event_start = None
 
-        #     for i, session_date in enumerate(session_dates.values):
-        #         if session_date >= dt_util.now().date() and (
-        #             session_date < event_start or event_start is None
-        #         ):
-        #             event_start = session_date
+        for _, race in schedule.iterrows():
+            session_dates = race[
+                [
+                    "Session1DateUtc",
+                    "Session2DateUtc",
+                    "Session3DateUtc",
+                    "Session4DateUtc",
+                    "Session5DateUtc",
+                ]
+            ]
 
-        #             event_summary = (
-        #                 str(race["RoundNumber"])
-        #                 + " "
-        #                 + str(race["Country"])
-        #                 + " "
-        #                 + str(race["EventName"])
-        #                 + " "
-        #                 + str(race["Session" + str(i + 1)])
-        #             )
+            for i, session_ts in enumerate(session_dates.values):
+                session_date = session_ts.date()
 
-        #             break
+                if (
+                    not pd.isnull(session_ts)
+                    and session_date >= dt_util.now().date()
+                    and (event_start is None or session_date < event_start)
+                ):
+                    event_start = session_date
 
-        # if event_start is not None and event_summary is not None:
-        #     self._event = CalendarEvent(
-        #         summary=event_summary,
-        #         start=event_start,
-        #         end=event_start + timedelta(hours=2),
-        #     )
+                    event_summary = (
+                        str(race["RoundNumber"])
+                        + " "
+                        + str(race["Country"])
+                        + " "
+                        + str(race["EventName"])
+                        + " "
+                        + str(race["Session" + str(i + 1)])
+                    )
+
+                    break
+
+        if event_start is not None and event_summary is not None:
+            self._event = CalendarEvent(
+                summary=event_summary,
+                start=event_start,
+                end=event_start + timedelta(hours=2),
+            )
 
         super()._handle_coordinator_update()
 

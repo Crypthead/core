@@ -48,6 +48,8 @@ class F1Coordinator(DataUpdateCoordinator):
                 inplace=True,
             )
 
+            # data = data.dropna()
+
             _LOGGER.info("FETCH F1 DATA %s", data.to_string())
             return data
 
