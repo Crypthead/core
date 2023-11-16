@@ -29,26 +29,42 @@ class F1Coordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint.
 
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
+        Returns
+        -------
+        Dictionary containing 3 DataFrames:
+        - schedule
+        - driver_standings
+        - constructor_standings
+
         """
         try:
-            # Get current year's schedule
+            # Get current year's schedule (RoundNumber, Country, Location, Session1, Session1Date,
+            #  Session2, Session2Date,  Session3, Session3Date,  Session4, Session4Date,  Session5, Session5Date)
             schedule = await self.hass.async_add_executor_job(
                 fastf1.get_event_schedule, date.today().year
             )
 
             schedule.drop(
                 [
-                    "Session1Date",
-                    "Session2Date",
-                    "Session3Date",
-                    "Session4Date",
-                    "Session5Date",
+                    "Location",
+                    "OfficialEventName",
+                    "EventDate",
+                    "EventFormat",
+                    "Session1DateUtc",
+                    "Session2DateUtc",
+                    "Session3DateUtc",
+                    "Session4DateUtc",
+                    "Session5DateUtc",
+                    "F1ApiSupport",
                 ],
                 axis=1,
                 inplace=True,
             )
+
+            schedule.drop(schedule[schedule["Session5"] == "None"].index, inplace=True)
+            # schedule.dropna(subset=['Session5Date'], inplace=True)
+
+            # Driver Standings (position, points, givenName, familyName, constructorNames)
 
             driver_standings = await self.hass.async_add_executor_job(
                 self.ergast.get_driver_standings, date.today().year
@@ -56,6 +72,7 @@ class F1Coordinator(DataUpdateCoordinator):
 
             driver_standings = driver_standings.content[0].drop(
                 [
+                    "positionText",
                     "wins",
                     "driverId",
                     "driverNumber",
@@ -69,6 +86,8 @@ class F1Coordinator(DataUpdateCoordinator):
                 ],
                 axis=1,
             )
+
+            # Constructor Standings (position, points, constructorName)
 
             constructor_standings = await self.hass.async_add_executor_job(
                 self.ergast.get_constructor_standings, date.today().year
@@ -91,9 +110,6 @@ class F1Coordinator(DataUpdateCoordinator):
                 "constructor_standings": constructor_standings,
             }
 
-            _LOGGER.info("FETCH F1 DATA %s", schedule.to_string())
-            _LOGGER.info("FETCH F1 DATA %s", driver_standings.to_string())
-            _LOGGER.info("FETCH F1 DATA %s", constructor_standings.to_string())
             _LOGGER.info("FETCH F1 DATA %s", data_dict)
             return data_dict
 
