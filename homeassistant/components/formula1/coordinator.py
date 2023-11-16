@@ -1,18 +1,11 @@
 """Example integration using DataUpdateCoordinator."""
-
-from datetime import timedelta, date
+# pylint: disable=broad-exception-caught
+from datetime import date, timedelta
 import logging
 
-import async_timeout
-
-from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-
 import fastf1
+
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,13 +32,29 @@ class F1Coordinator(DataUpdateCoordinator):
         """
         try:
             # Get current year's schedule
-            data = fastf1.get_event_schedule(date.today().year, include_testing=False, backend='fastf1', force_ergast=False)
+            data = await self.hass.async_add_executor_job(
+                fastf1.get_event_schedule(
+                    date.today().year,
+                    include_testing=False,
+                    backend="fastf1",
+                    force_ergast=False,
+                )
+            )
 
-            data.drop(['Session1Date', 'Session2Date', 'Session3Date', 'Session4Date', 'Session5Date'], axis=1, inplace=True)
+            data.drop(
+                [
+                    "Session1Date",
+                    "Session2Date",
+                    "Session3Date",
+                    "Session4Date",
+                    "Session5Date",
+                ],
+                axis=1,
+                inplace=True,
+            )
 
+            _LOGGER.debug("FETCH F1 DATA")
             return data
 
-        except Exception as e:
+        except Exception:
             pass
-
-
