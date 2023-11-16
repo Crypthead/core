@@ -21,7 +21,7 @@ class F1Coordinator(DataUpdateCoordinator):
             # Name of the data. For logging purposes.
             name="Fast-F1 API",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(hours=12),
+            update_interval=timedelta(hours=1),
         )
 
     async def _async_update_data(self):
@@ -33,12 +33,7 @@ class F1Coordinator(DataUpdateCoordinator):
         try:
             # Get current year's schedule
             data = await self.hass.async_add_executor_job(
-                fastf1.get_event_schedule(
-                    date.today().year,
-                    include_testing=False,
-                    backend="fastf1",
-                    force_ergast=False,
-                )
+                fastf1.get_event_schedule, date.today().year
             )
 
             data.drop(
@@ -53,8 +48,9 @@ class F1Coordinator(DataUpdateCoordinator):
                 inplace=True,
             )
 
-            _LOGGER.debug("FETCH F1 DATA")
+            _LOGGER.info("FETCH F1 DATA %s", data.to_string())
             return data
 
-        except Exception:
-            pass
+        except Exception as e:
+            _LOGGER.error("Error fetching F1 data: %s", e)
+            raise
