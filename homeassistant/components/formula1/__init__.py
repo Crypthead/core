@@ -1,16 +1,14 @@
 """The formula1 integration."""
 from __future__ import annotations
 
-# pylint: disable=W7421
-# pylint: disable=W0718
 import logging
 
-from homeassistant.components.formula1.coordinator import F1Coordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .coordinator import F1Coordinator
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR]
 
