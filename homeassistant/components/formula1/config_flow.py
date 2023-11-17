@@ -16,13 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("notify_driver_standings_changed", default=True): bool,
-        vol.Required("notify_team_standings_changed"): bool,
-        vol.Required("add_practice_events"): bool,
-        vol.Required("add_qualification_events"): bool,
-        vol.Required("add_sprint_events"): bool,
-        vol.Required("add_sprint_shootout_events"): bool,
-        vol.Required("add_race_events", default=True): bool,
+        vol.Required("show_calendar", default=True): bool,
+        vol.Required("only_show_race_event", default=True): bool,
+        vol.Required("show_driver_standings", default=True): bool,
+        vol.Required("show_team_standings"): bool,
     }
 )
 

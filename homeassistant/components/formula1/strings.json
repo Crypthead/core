@@ -5,13 +5,10 @@
         "title": "Configure the integration",
         "description": "Select what you are interested in",
         "data": {
-          "notify_driver_standings_changed": "Send an event when the driver standings change",
-          "notify_team_standings_changed": "Send an event when the team standings change",
-          "add_practice_events": "Add practice events to the calendar",
-          "add_qualification_events": "Add qualification events to the calendar",
-          "add_sprint_events": "Add sprint events to the calendar",
-          "add_sprint_shootout_events": "Add sprint shootout events to the calendar",
-          "add_race_events": "Add race events to the calendar"
+          "show_calendar": "Add an entity which shows the upcoming races in Home Assistant",
+          "only_show_race_event": "In the calendar, only show the final race vents or also include the practices, prints and qualifications",
+          "show_driver_standings": "Add an entity which shows the current driver standings in Formula 1",
+          "show_team_standings": "Add an entity which shows the current team standings in Formula 1"
         }
       }
     },
