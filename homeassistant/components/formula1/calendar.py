@@ -56,7 +56,7 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Return calendar events within a datetime range."""
         events: list[CalendarEvent] = []
 
-        schedule = self.coordinator.data
+        schedule = self.coordinator.data['schedule']
         # GET ALL EVENTS BETWEEN START AND END DATE
         for _, race in schedule.iterrows():
             session_dates = race[
@@ -103,7 +103,7 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Handle updated data from the coordinator."""
 
         # FIND NEXT UPCOMING RACE
-        schedule = self.coordinator.data
+        schedule = self.coordinator.data['schedule']
 
         event_start = None
 
