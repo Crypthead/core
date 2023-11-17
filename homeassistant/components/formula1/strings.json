@@ -6,9 +6,15 @@
         "description": "Select what you are interested in",
         "data": {
           "show_calendar": "Show upcoming events in the calendar",
-          "only_show_race_event": "Only track race events in the calendar",
           "show_driver_standings": "Add an entity which shows the current driver standings in Formula 1",
           "show_constructor_standings": "Add an entity which shows the current team standings in Formula 1"
+        }
+      },
+      "calendar": {
+        "title": "Configure the calendar",
+        "description": "Select what you are interested in",
+        "data": {
+          "only_show_race_event": "Only include track race events in the calendar"
         }
       }
     },

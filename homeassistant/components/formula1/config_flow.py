@@ -17,9 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("show_calendar", default=True): bool,
-        vol.Required("only_show_race_event", default=True): bool,
         vol.Required("show_driver_standings", default=True): bool,
         vol.Required("show_constructor_standings"): bool,
+    }
+)
+
+STEP_CALENDAR_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required("only_show_race_event", default=True): bool,
     }
 )
 
@@ -45,10 +50,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self.data: dict[str, Any] = {}
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
+        """Handle what information to be displayed."""
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
@@ -57,9 +67,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception %s", e)
                 errors["base"] = "Unexpected exception:" + str(e)
             else:
+                if info["show_calendar"]:
+                    self.data = info
+                    return await self.async_step_calendar()
                 _LOGGER.info("Received config: %s", str(info))
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_calendar(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Configure the calendar."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self.data["only_show_race_event"] = user_input["only_show_race_event"]
+            return self.async_create_entry(title=self.data["title"], data=self.data)
+
+        return self.async_show_form(
+            step_id="calendar", data_schema=STEP_CALENDAR_DATA_SCHEMA, errors=errors
         )
