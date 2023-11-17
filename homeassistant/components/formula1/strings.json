@@ -8,7 +8,7 @@
           "show_calendar": "Add an entity which shows the upcoming races in Home Assistant",
           "only_show_race_event": "In the calendar, only show the final race vents or also include the practices, prints and qualifications",
           "show_driver_standings": "Add an entity which shows the current driver standings in Formula 1",
-          "show_team_standings": "Add an entity which shows the current team standings in Formula 1"
+          "show_constructor_standings": "Add an entity which shows the current team standings in Formula 1"
         }
       }
     },

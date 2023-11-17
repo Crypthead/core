@@ -19,7 +19,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("show_calendar", default=True): bool,
         vol.Required("only_show_race_event", default=True): bool,
         vol.Required("show_driver_standings", default=True): bool,
-        vol.Required("show_team_standings"): bool,
+        vol.Required("show_constructor_standings"): bool,
     }
 )
 
@@ -29,6 +29,13 @@ async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> dict[str, An
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    if not (
+        data["show_calendar"]
+        or data["show_driver_standings"]
+        or data["show_constructor_standings"]
+    ):
+        raise ValueError("Must select at least one type of information to show")
+
     data["title"] = "formula1_config"
     return data
 
