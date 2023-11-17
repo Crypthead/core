@@ -48,6 +48,7 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, entry)
         self._event: CalendarEvent | None = None
+        self.only_show_race_event = entry.data["only_show_race_event"]
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -73,17 +74,18 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                 ]
             ]
 
-            for i, session_ts in enumerate(session_dates.values):
-                session_date = session_ts.to_pydatetime()
+            if self.only_show_race_event:
+                session_date = session_dates["Session5Date"].to_pydatetime()
+
                 if (
-                    not pd.isnull(session_ts)
+                    not pd.isnull(session_dates["Session5Date"])
                     and session_date >= start_date
                     and session_date + timedelta(hours=2) < end_date
                 ):
                     event_summary = (
                         str(race["EventName"])
                         + ", "
-                        + str(race["Session" + str(i + 1)])
+                        + str(race["Session5"])
                         + ", "
                         + str(race["RoundNumber"])
                         + " rounds"
@@ -99,6 +101,33 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                             end=session_date + timedelta(hours=2),
                         )
                     )
+            else:
+                for i, session_ts in enumerate(session_dates.values):
+                    session_date = session_ts.to_pydatetime()
+                    if (
+                        not pd.isnull(session_ts)
+                        and session_date >= start_date
+                        and session_date + timedelta(hours=2) < end_date
+                    ):
+                        event_summary = (
+                            str(race["EventName"])
+                            + ", "
+                            + str(race["Session" + str(i + 1)])
+                            + ", "
+                            + str(race["RoundNumber"])
+                            + " rounds"
+                        )
+
+                        event_location = str(race["Country"])
+
+                        events.append(
+                            CalendarEvent(
+                                summary=event_summary,
+                                location=event_location,
+                                start=session_date,
+                                end=session_date + timedelta(hours=2),
+                            )
+                        )
 
         return events
 
@@ -121,27 +150,47 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                 ]
             ]
 
-            for i, session_ts in enumerate(session_dates.values):
-                session_date = session_ts.to_pydatetime()
+            if self.only_show_race_event:
+                session_date = session_dates["Session5Date"].to_pydatetime()
 
                 if (
-                    not pd.isnull(session_ts)
+                    not pd.isnull(session_dates["Session5Date"])
                     and session_date >= dt_util.now()
                     and (event_start is None or session_date < event_start)
                 ):
                     event_start = session_date
-                    event_location = str(race["Country"])
-
                     event_summary = (
                         str(race["EventName"])
                         + ", "
-                        + str(race["Session" + str(i + 1)])
+                        + str(race["Session5"])
                         + ", "
                         + str(race["RoundNumber"])
                         + " rounds"
                     )
 
-                    break
+                    event_location = str(race["Country"])
+            else:
+                for i, session_ts in enumerate(session_dates.values):
+                    session_date = session_ts.to_pydatetime()
+
+                    if (
+                        not pd.isnull(session_ts)
+                        and session_date >= dt_util.now()
+                        and (event_start is None or session_date < event_start)
+                    ):
+                        event_start = session_date
+                        event_location = str(race["Country"])
+
+                        event_summary = (
+                            str(race["EventName"])
+                            + ", "
+                            + str(race["Session" + str(i + 1)])
+                            + ", "
+                            + str(race["RoundNumber"])
+                            + " rounds"
+                        )
+
+                        break
 
         if event_start is not None and event_summary is not None:
             self._event = CalendarEvent(
