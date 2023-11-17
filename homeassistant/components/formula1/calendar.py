@@ -43,6 +43,7 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
     _attr_has_entity_name = True
     _attr_icon = "mdi:delete-empty"
     _attr_name = "Formula 1"
+    _attr_unique_id = "formula_1"
 
     def __init__(self, coordinator: F1Coordinator, entry: ConfigEntry) -> None:
         """Pass coordinator to CoordinatorEntity."""
