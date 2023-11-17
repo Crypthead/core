@@ -41,7 +41,6 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
     """Defines a F1 calendar."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:delete-empty"
     _attr_name = "Formula 1"
     _attr_unique_id = "formula_1"
 
