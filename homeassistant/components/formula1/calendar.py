@@ -30,7 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up F1 based on a config entry."""
 
-    if not entry.data["show_calendar"]:
+    if not entry.data.get("show_calendar", False):
         return
 
     coordinator = hass.data[DOMAIN][entry.entry_id]

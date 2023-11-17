@@ -27,10 +27,10 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if entry.data["show_driver_standings"]:
+    if entry.data.get("show_driver_standings", False):
         async_add_entities([F1Sensor(coordinator, entry, True)])
 
-    if entry.data["show_constructor_standings"]:
+    if entry.data.get("show_constructor_standings", False):
         async_add_entities([F1Sensor(coordinator, entry, False)])
 
 
