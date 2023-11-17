@@ -56,25 +56,25 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Return calendar events within a datetime range."""
         events: list[CalendarEvent] = []
 
-        schedule = self.coordinator.data['schedule']
+        schedule = self.coordinator.data["schedule"]
         # GET ALL EVENTS BETWEEN START AND END DATE
         for _, race in schedule.iterrows():
             session_dates = race[
                 [
-                    "Session1DateUtc",
-                    "Session2DateUtc",
-                    "Session3DateUtc",
-                    "Session4DateUtc",
-                    "Session5DateUtc",
+                    "Session1Date",
+                    "Session2Date",
+                    "Session3Date",
+                    "Session4Date",
+                    "Session5Date",
                 ]
             ]
 
             for i, session_ts in enumerate(session_dates.values):
-                session_date = session_ts.date()
+                session_date = session_ts.to_pydatetime()
                 if (
                     not pd.isnull(session_ts)
-                    and session_date >= start_date.date()
-                    and session_date + timedelta(hours=2) < end_date.date()
+                    and session_date >= start_date
+                    and session_date + timedelta(hours=2) < end_date
                 ):
                     event_summary = (
                         str(race["EventName"])
@@ -103,27 +103,31 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Handle updated data from the coordinator."""
 
         # FIND NEXT UPCOMING RACE
-        schedule = self.coordinator.data['schedule']
+        schedule = self.coordinator.data["schedule"]
+        _LOGGER.info(
+            "////////////////////////////////////////////////////in calendar.py\n %s",
+            schedule,
+        )
 
         event_start = None
 
         for _, race in schedule.iterrows():
             session_dates = race[
                 [
-                    "Session1DateUtc",
-                    "Session2DateUtc",
-                    "Session3DateUtc",
-                    "Session4DateUtc",
-                    "Session5DateUtc",
+                    "Session1Date",
+                    "Session2Date",
+                    "Session3Date",
+                    "Session4Date",
+                    "Session5Date",
                 ]
             ]
 
             for i, session_ts in enumerate(session_dates.values):
-                session_date = session_ts.date()
+                session_date = session_ts.to_pydatetime()
 
                 if (
                     not pd.isnull(session_ts)
-                    and session_date >= dt_util.now().date()
+                    and session_date >= dt_util.now()
                     and (event_start is None or session_date < event_start)
                 ):
                     event_start = session_date

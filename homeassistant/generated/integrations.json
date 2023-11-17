@@ -1833,7 +1833,7 @@
       "iot_class": "local_push"
     },
     "formula1": {
-      "name": "formula1",
+      "name": "Formula 1",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

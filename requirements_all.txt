@@ -25,9 +25,6 @@ CO2Signal==0.4.2
 # homeassistant.components.doorbird
 DoorBirdPy==2.1.0
 
-# homeassistant.components.formula1
-fastf1==3.1.4
-
 # homeassistant.components.homekit
 HAP-python==4.7.1
 
@@ -783,6 +780,9 @@ faadelays==0.0.7
 
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
+
+# homeassistant.components.formula1
+fastf1==3.1.4
 
 # homeassistant.components.feedreader
 feedparser==6.0.10

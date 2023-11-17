@@ -1,7 +1,7 @@
 {
   "domain": "formula1",
-  "name": "formula1",
-  "codeowners": ["@Crypthead"],
+  "name": "Formula 1",
+  "codeowners": ["@Tango"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/formula1",
