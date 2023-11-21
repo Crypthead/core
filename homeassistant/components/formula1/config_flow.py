@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("show_calendar", default=True): bool,
+        vol.Required("show_last_results", default=True): bool,
+        vol.Required("show_last_winner", default=True): bool,
         vol.Required("show_driver_standings", default=True): bool,
         vol.Required("show_constructor_standings"): bool,
     }
@@ -30,7 +32,7 @@ STEP_CALENDAR_DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+    """Input validation to guarantee that it is coherent.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
@@ -38,6 +40,8 @@ async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> dict[str, An
         data["show_calendar"]
         or data["show_driver_standings"]
         or data["show_constructor_standings"]
+        or data["show_last_winner"]
+        or data["show_last_results"]
     ):
         raise ValueError("Must select at least one type of information to show")
 
@@ -58,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle what information to be displayed."""
+        """Handle what information to be displayed in the integration."""
         errors: dict[str, str] = {}
         if user_input is not None:
             try:

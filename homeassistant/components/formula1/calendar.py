@@ -41,8 +41,8 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
     """Defines a F1 calendar."""
 
     _attr_has_entity_name = True
-    _attr_name = "Formula 1"
-    _attr_unique_id = "formula_1"
+    _attr_name = "Formula 1 calendar"
+    _attr_unique_id = "formula_1_calendar"
 
     def __init__(self, coordinator: F1Coordinator, entry: ConfigEntry) -> None:
         """Pass coordinator to CoordinatorEntity."""
@@ -165,3 +165,8 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
+
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity."""
+        return "mdi:go-kart-track"

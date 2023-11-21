@@ -1,22 +1,29 @@
 """Support for formula1 sensor."""
 from __future__ import annotations
 
-import datetime
+from enum import Enum
 import logging
-from typing import Any, Union
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import F1Coordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class SensorType(Enum):
+    """Specifies what information the F1Sensor displays."""
+
+    DRIVER_STANDINGS = 1
+    CONSTRUCTOR_STANDINGS = 2
+    LAST_RACE_WINNER = 3
+    LAST_RACE_FINAL_POSITIONS = 4
 
 
 async def async_setup_entry(
@@ -27,62 +34,115 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
+    entities_to_add = []
+
     if entry.data.get("show_driver_standings", False):
-        async_add_entities([F1Sensor(coordinator, entry, True)])
+        entities_to_add.append(
+            F1Sensor(coordinator, entry, SensorType.DRIVER_STANDINGS)
+        )
 
     if entry.data.get("show_constructor_standings", False):
-        async_add_entities([F1Sensor(coordinator, entry, False)])
+        entities_to_add.append(
+            F1Sensor(coordinator, entry, SensorType.CONSTRUCTOR_STANDINGS)
+        )
+
+    if entry.data.get("show_last_winner", False):
+        entities_to_add.append(
+            F1Sensor(coordinator, entry, SensorType.LAST_RACE_WINNER)
+        )
+
+    if entry.data.get("show_last_results", False):
+        entities_to_add.append(
+            F1Sensor(coordinator, entry, SensorType.LAST_RACE_FINAL_POSITIONS)
+        )
+
+    if entities_to_add:
+        async_add_entities(entities_to_add)
 
 
 class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
     """Implementation of the F1Sensor sensor."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
         coordinator: F1Coordinator,
-        entry: ConfigEntry,
-        driver_else_constructor: bool,
+        _: ConfigEntry,
+        sensor_type: SensorType,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self.sensor_type = sensor_type
+        self._attr_unique_id = sensor_type.name
 
-        unique_str = "driver" if driver_else_constructor else "constructor"
-        name = f"Formula 1 {unique_str} standings"
-
-        self._attr_unique_id = f"{entry.entry_id}_{unique_str}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=name,
-        )
-
-        self.driver_else_constructor = driver_else_constructor
-        self.last_date_changed = dt_util.now().date()
-        self.last_standings: Union[None, dict[str, Any]] = None
+        self.last_date_changed = None
+        self.last_winner = ""
 
     @property
-    def native_value(self) -> datetime.date:
-        """Returns the last time the standings have changed."""
-        return self.last_date_changed
+    def native_value(self) -> str:
+        """Returns the last time the standings have changed or the last winner."""
+        if self.sensor_type == SensorType.LAST_RACE_WINNER:
+            return self.last_winner
+        if self.last_date_changed:
+            return self.last_date_changed.strftime("%Y-%m-%d")
+        return ""
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if self.driver_else_constructor:
-            data = self.coordinator.data["driver_standings"]
-            name_column = "familyName"
-        else:
-            data = self.coordinator.data["constructor_standings"]
-            name_column = "constructorName"
+        self.last_date_changed = self.coordinator.data["last_race_info"]["raceDate"]
+
+        match self.sensor_type:
+            case SensorType.DRIVER_STANDINGS:
+                data = self.coordinator.data["driver_standings"]
+                name_column = "familyName"
+                result_column = "points"
+            case SensorType.CONSTRUCTOR_STANDINGS:
+                data = self.coordinator.data["constructor_standings"]
+                name_column = "constructorName"
+                result_column = "points"
+            case SensorType.LAST_RACE_FINAL_POSITIONS:
+                data = self.coordinator.data["last_race_results"]
+                name_column = "familyName"
+            case SensorType.LAST_RACE_WINNER:
+                self.last_winner = self.coordinator.data["last_race_results"][
+                    "familyName"
+                ].iloc[0]
+                return self.coordinator.data["last_race_info"]
 
         attrs = {}
-        for position, standing in data.iterrows():
-            attrs[f"{position + 1} - {standing[name_column]}"] = standing["points"]
+        if self.sensor_type in [
+            SensorType.DRIVER_STANDINGS,
+            SensorType.CONSTRUCTOR_STANDINGS,
+        ]:
+            for position, standing in data.iterrows():
+                attrs[f"{position + 1} - {standing[name_column]}"] = standing[
+                    result_column
+                ]
 
-        if self.last_standings != attrs:
-            self.last_date_changed = dt_util.now().date()
-            self.last_standings = attrs
+        else:
+            for position, standing in data.iterrows():
+                attrs[position] = standing[name_column]
 
         return attrs
+
+    @property
+    def name(self) -> str:
+        """Name of the entity."""
+        match self.sensor_type:
+            case SensorType.DRIVER_STANDINGS:
+                return "Formula 1 drivers standings"
+            case SensorType.CONSTRUCTOR_STANDINGS:
+                return "Formula 1 constructors standings"
+            case SensorType.LAST_RACE_WINNER:
+                return "Formula 1 last race winner"
+            case SensorType.LAST_RACE_FINAL_POSITIONS:
+                return "Formula 1 last race results"
+            case _:
+                return ""
+
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity."""
+        return "mdi:go-kart"
