@@ -45,10 +45,13 @@ class F1Coordinator(DataUpdateCoordinator):
 
             constructor_standings = await self._get_constructor_standings()
 
+            last_race_results = await self._get_last_race_results()
+
             data_dict = {
                 "schedule": schedule,
                 "driver_standings": driver_standings,
                 "constructor_standings": constructor_standings,
+                "last_race_results": last_race_results,
             }
 
             _LOGGER.info("FETCH F1 DATA %s", data_dict)
@@ -69,7 +72,7 @@ class F1Coordinator(DataUpdateCoordinator):
         """
 
         constructor_standings = await self.hass.async_add_executor_job(
-            self.ergast.get_constructor_standings, dt_util.now().today().year
+            self.ergast.get_constructor_standings, "current"
         )
 
         constructor_standings = constructor_standings.content[0].drop(
@@ -96,7 +99,7 @@ class F1Coordinator(DataUpdateCoordinator):
         """
 
         driver_standings = await self.hass.async_add_executor_job(
-            self.ergast.get_driver_standings, dt_util.now().today().year
+            self.ergast.get_driver_standings, "current"
         )
 
         driver_standings = driver_standings.content[0].drop(
@@ -152,3 +155,30 @@ class F1Coordinator(DataUpdateCoordinator):
 
         schedule.drop(schedule[schedule["Session5"] == "None"].index, inplace=True)
         return schedule
+
+    async def _get_last_race_results(self):
+        """Get race results for the latest race.
+
+        Returns
+        -------
+        DataFrame with columns:
+
+        position (index), constructorName, givenName, familyName
+        """
+
+        _LOGGER.info("Retrieving results from last race")
+
+        last_results = await self.hass.async_add_executor_job(
+            self.ergast.get_race_results, "current", "last"
+        )
+
+        last_results = last_results.content[0][
+            ["position", "constructorName", "givenName", "familyName"]
+        ]
+
+        # Convert position from double to int for a nicer viewing experience
+        last_results = last_results.astype({"position": "int"})
+
+        last_results.set_index("position", drop=True, inplace=True)
+
+        return last_results
