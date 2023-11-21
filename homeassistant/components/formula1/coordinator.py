@@ -32,10 +32,12 @@ class F1Coordinator(DataUpdateCoordinator):
 
         Returns
         -------
-        Dictionary containing 3 DataFrames:
+        Dictionary containing 5 DataFrames:
         - schedule
         - driver_standings
         - constructor_standings
+        - last_race_results
+        - last_race_info
 
         """
         try:
