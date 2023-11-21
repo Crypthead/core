@@ -47,11 +47,14 @@ class F1Coordinator(DataUpdateCoordinator):
 
             last_race_results = await self._get_last_race_results()
 
+            last_race_info = await self._get_last_race_info()
+
             data_dict = {
                 "schedule": schedule,
                 "driver_standings": driver_standings,
                 "constructor_standings": constructor_standings,
                 "last_race_results": last_race_results,
+                "last_race_info": last_race_info,
             }
 
             _LOGGER.info("FETCH F1 DATA %s", data_dict)
@@ -182,3 +185,23 @@ class F1Coordinator(DataUpdateCoordinator):
         last_results.set_index("position", drop=True, inplace=True)
 
         return last_results
+
+    async def _get_last_race_info(self):
+        """Get information about the last race.
+
+        Returns
+        -------
+        dictionary with keys:
+
+        round (round number), raceName, country, raceDate
+        """
+
+        _LOGGER.info("Retrieving information about last race")
+
+        last_race = await self.hass.async_add_executor_job(
+            self.ergast.get_race_schedule, "current", "last"
+        )
+
+        last_race = last_race[["round", "raceName", "country", "raceDate"]]
+
+        return last_race.to_dict(orient="records")[0]
