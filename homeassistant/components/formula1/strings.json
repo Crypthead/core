@@ -5,11 +5,11 @@
         "title": "Configure the integration",
         "description": "Select what you are interested in",
         "data": {
-          "show_calendar": "Show upcoming events in the calendar",
-          "show_driver_standings": "Add a sensor which shows the current driver standings in Formula 1",
-          "show_constructor_standings": "Add a sensor which shows the current constructor standings in Formula 1",
-          "show_last_winner": "Add a sensor which shows the winner of the most recent race in Formula 1",
-          "show_last_results": "Add a sensor which shows the standings of the last Formula 1 race"
+          "show_calendar": "Add a Calendar for events",
+          "show_driver_standings": "Add a Sensor for all driver standings in Formula 1",
+          "show_constructor_standings": "Add a Sensor for all constructor standings in Formula 1",
+          "show_last_winner": "Add a Sensor for the winner of the most recent race in Formula 1",
+          "show_last_results": "Add a Sensor for the standings of the most recent race in Formula 1"
         }
       },
       "calendar": {
