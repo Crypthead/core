@@ -2,10 +2,21 @@
   "config": {
     "step": {
       "user": {
+        "title": "Configure the integration",
+        "description": "Select what you are interested in",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "show_calendar": "Add a Calendar for events",
+          "show_driver_standings": "Add a Sensor for all driver standings in Formula 1",
+          "show_constructor_standings": "Add a Sensor for all constructor standings in Formula 1",
+          "show_last_winner": "Add a Sensor for the winner of the most recent race in Formula 1",
+          "show_last_results": "Add a Sensor for the standings of the most recent race in Formula 1"
+        }
+      },
+      "calendar": {
+        "title": "Configure the calendar",
+        "description": "Select what you are interested in",
+        "data": {
+          "only_show_race_event": "Only include track race events in the calendar"
         }
       }
     },

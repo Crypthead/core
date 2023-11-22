@@ -103,8 +103,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
 /homeassistant/components/arris_tg2492lg/ @vanbalken
-/homeassistant/components/asa/ @a
-/tests/components/asa/ @a
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
 /homeassistant/components/assist_pipeline/ @balloob @synesthesiam
@@ -404,8 +402,8 @@ build.json @home-assistant/supervisor
 /tests/components/forecast_solar/ @klaasnicolaas @frenck
 /homeassistant/components/forked_daapd/ @uvjustin
 /tests/components/forked_daapd/ @uvjustin
-/homeassistant/components/formula1/ @Crypthead
-/tests/components/formula1/ @Crypthead
+/homeassistant/components/formula1/ @Tango
+/tests/components/formula1/ @Tango
 /homeassistant/components/fortios/ @kimfrellsen
 /homeassistant/components/foscam/ @skgsergio
 /tests/components/foscam/ @skgsergio
