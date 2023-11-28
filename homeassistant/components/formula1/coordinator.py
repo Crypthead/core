@@ -23,7 +23,7 @@ class F1Coordinator(DataUpdateCoordinator):
             # Name of the data. For logging purposes.
             name="Fast-F1 API",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(hours=1),
         )
         self.ergast = Ergast()
 
@@ -66,6 +66,45 @@ class F1Coordinator(DataUpdateCoordinator):
             _LOGGER.error("Error fetching F1 data: %s", e)
             raise
 
+    async def _get_schedule(self):
+        """Get current year's schedule.
+
+        Returns
+        -------
+        DataFrame with columns:
+
+        EventName, RoundNumber, Country, Location, Session1, Session1Date,
+        Session2, Session2Date,  Session3, Session3Date,  Session4, Session4Date,  Session5, Session5Date
+        """
+
+        schedule = await self.hass.async_add_executor_job(
+            fastf1.get_event_schedule, dt_util.now().today().year
+        )
+        schedule = schedule[
+            [
+                "RoundNumber",
+                "EventName",
+                "Country",
+                "Location",
+                "Session1",
+                "Session1Date",
+                "Session2",
+                "Session2Date",
+                "Session3",
+                "Session3Date",
+                "Session4",
+                "Session4Date",
+                "Session5",
+                "Session5Date",
+            ]
+        ]
+
+        # Remove Pre-season testing, by create a boolean mask.
+        mask = schedule["Session5"] != "None"
+
+        # Use the mask to select rows where Session5 is not 'None'
+        return schedule[mask]
+
     async def _get_constructor_standings(self):
         """Get current constructor standings.
 
@@ -80,16 +119,9 @@ class F1Coordinator(DataUpdateCoordinator):
             self.ergast.get_constructor_standings, "current"
         )
 
-        constructor_standings = constructor_standings.content[0].drop(
-            [
-                "positionText",
-                "wins",
-                "constructorId",
-                "constructorUrl",
-                "constructorNationality",
-            ],
-            axis=1,
-        )
+        constructor_standings = constructor_standings.content[0][
+            ["position", "points", "constructorName"]
+        ]
 
         return constructor_standings
 
@@ -107,59 +139,11 @@ class F1Coordinator(DataUpdateCoordinator):
             self.ergast.get_driver_standings, "current"
         )
 
-        driver_standings = driver_standings.content[0].drop(
-            [
-                "positionText",
-                "wins",
-                "driverId",
-                "driverNumber",
-                "driverCode",
-                "driverUrl",
-                "dateOfBirth",
-                "driverNationality",
-                "constructorIds",
-                "constructorUrls",
-                "constructorNationalities",
-            ],
-            axis=1,
-        )
+        driver_standings = driver_standings.content[0][
+            ["position", "points", "givenName", "familyName", "constructorNames"]
+        ]
 
         return driver_standings
-
-    async def _get_schedule(self):
-        """Get current year's schedule.
-
-        Returns
-        -------
-        DataFrame with columns:
-
-        RoundNumber, Country, Location, Session1, Session1Date,
-        Session2, Session2Date,  Session3, Session3Date,  Session4, Session4Date,  Session5, Session5Date
-        """
-
-        schedule = await self.hass.async_add_executor_job(
-            fastf1.get_event_schedule, dt_util.now().today().year
-        )
-
-        schedule.drop(
-            [
-                "Location",
-                "OfficialEventName",
-                "EventDate",
-                "EventFormat",
-                "Session1DateUtc",
-                "Session2DateUtc",
-                "Session3DateUtc",
-                "Session4DateUtc",
-                "Session5DateUtc",
-                "F1ApiSupport",
-            ],
-            axis=1,
-            inplace=True,
-        )
-
-        schedule.drop(schedule[schedule["Session5"] == "None"].index, inplace=True)
-        return schedule
 
     async def _get_last_race_results(self):
         """Get race results for the latest race.
