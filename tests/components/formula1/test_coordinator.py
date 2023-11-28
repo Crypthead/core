@@ -16,7 +16,7 @@ sys.path.append(
 
 
 class MockErgastMultiResponse:
-    """Mocks ErgastMultiResponse wrapping a given DataFrame."""
+    """Mocks ErgastMultiResponse by wrapping a given DataFrame."""
 
     def __init__(self, data):
         """Wrap data in list."""
@@ -53,18 +53,41 @@ def create_mock_schedule():
 
 
 def create_mock_constructor_standings():
-    """Create mock constructor standings with full column set."""
+    """Create mock constructor standings with partial column set."""
     return create_mock_ergast_response(
         [
             "position",
             "points",
             "constructorName",
-            "wins",
+            "wins",  # Ensure "wins" get filtered
         ]
     )
 
 
-# def create_mock_driver_standings():
+def create_mock_driver_standings():
+    """Create mock driver standings with partial column set."""
+    return create_mock_ergast_response(
+        ["position", "points", "givenName", "familyName", "constructorNames", "wins"]
+    )
+
+
+def create_mock_last_race_results():
+    """Create mock last race results with partial column set."""
+    return create_mock_ergast_response(
+        ["position", "constructorName", "givenName", "familyName", "wins"]
+    )
+
+
+def create_mock_last_race_info():
+    """Create mock last race info with partial column set and fake data."""
+    data = {
+        "round": [1, 2],  # Example round numbers
+        "raceName": ["Grand Prix A", "Grand Prix B"],  # Example race names
+        "country": ["Country A", "Country B"],  # Example countries
+        "raceDate": ["2023-01-01", "2023-02-01"],  # Example dates
+        "wins": [3, 1],  # Example win counts
+    }
+    return pd.DataFrame(data)
 
 
 @pytest.mark.asyncio
@@ -75,43 +98,56 @@ async def test_async_update_data(hass: HomeAssistant):
     with patch("homeassistant.components.formula1.coordinator.Ergast") as mock_ergast:
         mock_ergast_instance = mock_ergast.return_value
 
-        # Mocking fastf1 method "get_event_schedule"
+        # Mocking fastf1 method "get_event_schedule()"
         with patch(
             "homeassistant.components.formula1.coordinator.fastf1.get_event_schedule"
         ) as mock_get_event_schedule:
-            mock_schedule_df = create_mock_schedule()
-            mock_get_event_schedule.return_value = mock_schedule_df
+            mock_get_event_schedule.return_value = create_mock_schedule()
 
-            # Create mock DataFrames
-
-            # Set up the mock return values
-            # mock_ergast_instance.get_driver_standings.return_value = mock_driver_standings_df
+            # Set up the mock return values for each API function call
             mock_ergast_instance.get_constructor_standings.return_value = (
                 create_mock_constructor_standings()
             )
+            mock_ergast_instance.get_driver_standings.return_value = (
+                create_mock_driver_standings()
+            )
+            mock_ergast_instance.get_race_results.return_value = (
+                create_mock_last_race_results()
+            )
+            mock_ergast_instance.get_race_schedule.return_value = (
+                create_mock_last_race_info()
+            )
 
-            # mock_ergast_instance.get_last_race_results = AsyncMock(side_effect=await async_mock_return(mock_last_race_results_df))
-            # mock_ergast_instance.get_last_race_info = AsyncMock(side_effect=await async_mock_return(mock_last_race_info_df))
-
-            # ... similar setup for other methods
-
-            # Mocking the logger
-
+            # Fetch data from coordinator
             coordinator = F1Coordinator(hass)
             data = await coordinator._async_update_data()
 
-            # Verify the data
-            # assert data["schedule"].equals(mock_schedule_df)
-            assert data["schedule"].equals(mock_schedule_df)
+            # Verify the data has been fetched and filtered
+
+            assert data["schedule"].equals(create_mock_schedule())
+
             assert data["constructor_standings"].equals(
                 pd.DataFrame(columns=["position", "points", "constructorName"])
             )
 
-            # print(type(data["constructor_standings"]))
-            # print(type(data["constructor_standings"]))
-            # assert data["constructor_standings"].equals(create_mock_ergast_response(["position", "points", "constructorName"]))
-            # assert data["last_race_results"].equals(mock_last_race_results_df)
-            # assert data["last_race_info"].equals(mock_last_race_info_df)
+            assert data["driver_standings"].equals(
+                pd.DataFrame(
+                    columns=[
+                        "position",
+                        "points",
+                        "givenName",
+                        "familyName",
+                        "constructorNames",
+                    ]
+                )
+            )
 
+            assert data["last_race_results"].equals(
+                pd.DataFrame(columns=["constructorName", "givenName", "familyName"])
+            )
 
-# print(create_mock_ergast_response(["HEllo", "hello"]).content)
+            expected_keys = {"round", "raceName", "country", "raceDate"}
+            actual_keys = set(data["last_race_info"].keys())
+            assert (
+                actual_keys == expected_keys
+            ), "The keys in last_race_info do not match the expected keys."
