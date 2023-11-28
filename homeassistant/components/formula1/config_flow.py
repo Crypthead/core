@@ -32,7 +32,7 @@ STEP_CALENDAR_DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Input validation to guarantee that it is coherent.
+    """Input validation to guarantee that at least one type of information is included.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
@@ -63,8 +63,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle what information to be displayed in the integration."""
+        # Check if already configured
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         errors: dict[str, str] = {}
-        if user_input is not None:
+        if user_input is not None:  # Check if the user already provided input
             try:
                 info = await validate_input(self.hass, user_input)
             except Exception as e:  # pylint: disable=broad-except
@@ -77,6 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.info("Received config: %s", str(info))
                 return self.async_create_entry(title=info["title"], data=user_input)
 
+        # Ask frontend for input
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
@@ -89,8 +94,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self.data["only_show_race_event"] = user_input["only_show_race_event"]
+            _LOGGER.info("Received config: %s", str(self.data))
             return self.async_create_entry(title=self.data["title"], data=self.data)
 
+        # Ask frontend for input
         return self.async_show_form(
             step_id="calendar", data_schema=STEP_CALENDAR_DATA_SCHEMA, errors=errors
         )
