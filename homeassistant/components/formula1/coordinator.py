@@ -23,7 +23,7 @@ class F1Coordinator(DataUpdateCoordinator):
             # Name of the data. For logging purposes.
             name="Fast-F1 API",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(hours=1),
         )
         self.ergast = Ergast()
 
@@ -80,16 +80,9 @@ class F1Coordinator(DataUpdateCoordinator):
             self.ergast.get_constructor_standings, "current"
         )
 
-        constructor_standings = constructor_standings.content[0].drop(
-            [
-                "positionText",
-                "wins",
-                "constructorId",
-                "constructorUrl",
-                "constructorNationality",
-            ],
-            axis=1,
-        )
+        constructor_standings = constructor_standings.content[0][
+            ["position", "points", "constructorName"]
+        ]
 
         return constructor_standings
 
