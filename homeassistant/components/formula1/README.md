@@ -13,8 +13,7 @@ The Formula 1 integration allows you to automate your own smart devices based on
 
 To add the **Formula 1** integration to your Home Assistant instance, use this My button:
 
-
-[<img src="image.png">](https://my.home-assistant.io/redirect/config_flow_start/?domain=Formula1)
+[<img src="button.png">](https://my.home-assistant.io/redirect/config_flow_start/?domain=Formula1)
 
 
 Manual configuration steps
@@ -30,7 +29,7 @@ If the above My button doesn’t work, you can also perform the following steps 
 
 - Select the configurations you'd like to have and press submit
 
-<img src="image-1.png" width="270" height="230">
+<img src="config.png" width="270" height="230"  style="border-radius: 5% ">
 
 
 ## Calendar
