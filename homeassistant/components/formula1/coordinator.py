@@ -107,22 +107,9 @@ class F1Coordinator(DataUpdateCoordinator):
             self.ergast.get_driver_standings, "current"
         )
 
-        driver_standings = driver_standings.content[0].drop(
-            [
-                "positionText",
-                "wins",
-                "driverId",
-                "driverNumber",
-                "driverCode",
-                "driverUrl",
-                "dateOfBirth",
-                "driverNationality",
-                "constructorIds",
-                "constructorUrls",
-                "constructorNationalities",
-            ],
-            axis=1,
-        )
+        driver_standings = driver_standings.content[0][
+            ["position", "points", "givenName", "familyName", "constructorNames"]
+        ]
 
         return driver_standings
 
