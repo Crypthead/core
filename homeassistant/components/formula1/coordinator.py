@@ -66,6 +66,44 @@ class F1Coordinator(DataUpdateCoordinator):
             _LOGGER.error("Error fetching F1 data: %s", e)
             raise
 
+    async def _get_schedule(self):
+        """Get current year's schedule.
+
+        Returns
+        -------
+        DataFrame with columns:
+
+        RoundNumber, Country, Location, Session1, Session1Date,
+        Session2, Session2Date,  Session3, Session3Date,  Session4, Session4Date,  Session5, Session5Date
+        """
+
+        schedule = await self.hass.async_add_executor_job(
+            fastf1.get_event_schedule, dt_util.now().today().year
+        )
+        schedule = schedule[
+            [
+                "RoundNumber",
+                "Country",
+                "Location",
+                "Session1",
+                "Session1Date",
+                "Session2",
+                "Session2Date",
+                "Session3",
+                "Session3Date",
+                "Session4",
+                "Session4Date",
+                "Session5",
+                "Session5Date",
+            ]
+        ]
+
+        # Remove Pre-season testing, by create a boolean mask.
+        mask = schedule["Session5"] != "None"
+
+        # Use the mask to select rows where Session5 is not 'None'
+        return schedule[mask]
+
     async def _get_constructor_standings(self):
         """Get current constructor standings.
 
@@ -105,41 +143,6 @@ class F1Coordinator(DataUpdateCoordinator):
         ]
 
         return driver_standings
-
-    async def _get_schedule(self):
-        """Get current year's schedule.
-
-        Returns
-        -------
-        DataFrame with columns:
-
-        RoundNumber, Country, Location, Session1, Session1Date,
-        Session2, Session2Date,  Session3, Session3Date,  Session4, Session4Date,  Session5, Session5Date
-        """
-
-        schedule = await self.hass.async_add_executor_job(
-            fastf1.get_event_schedule, dt_util.now().today().year
-        )
-
-        schedule.drop(
-            [
-                "Location",
-                "OfficialEventName",
-                "EventDate",
-                "EventFormat",
-                "Session1DateUtc",
-                "Session2DateUtc",
-                "Session3DateUtc",
-                "Session4DateUtc",
-                "Session5DateUtc",
-                "F1ApiSupport",
-            ],
-            axis=1,
-            inplace=True,
-        )
-
-        schedule.drop(schedule[schedule["Session5"] == "None"].index, inplace=True)
-        return schedule
 
     async def _get_last_race_results(self):
         """Get race results for the latest race.
