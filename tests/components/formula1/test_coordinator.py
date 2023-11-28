@@ -24,13 +24,9 @@ class MockErgastMultiResponse:
         self.content = [data]
 
 
-async def async_mock_return(df):
-    """Asynchronously returns a given DataFrame."""
-
-    async def return_function():
-        return df
-
-    return return_function
+def create_mock_ergast_response(columns):
+    """Create mock Ergast response with specified columns."""
+    return MockErgastMultiResponse(pd.DataFrame(columns=columns))
 
 
 def create_mock_schedule():
@@ -54,20 +50,17 @@ def create_mock_schedule():
 
 def create_mock_constructor_standings():
     """Create mock constructor standings with full column set."""
-    return MockErgastMultiResponse(
-        pd.DataFrame(
-            {
-                "position": [1, 2],
-                "points": [100, 80],
-                "constructorName": ["Team A", "Team B"],
-                # Include other columns that your code will drop, if necessary
-                "positionText": ["1", "2"],
-                "wins": [5, 3],
-                "constructorId": ["team_a", "team_b"],
-                "constructorUrl": ["http://team-a.com", "http://team-b.com"],
-                "constructorNationality": ["Country A", "Country B"],
-            }
-        )
+    return create_mock_ergast_response(
+        [
+            "position",
+            "points",
+            "constructorName",
+            "positionText",
+            "wins",
+            "constructorId",
+            "constructorUrl",
+            "constructorNationality",
+        ]
     )
 
 
@@ -82,11 +75,6 @@ def create_mock_constructor_standings_after():
             }
         )
     )
-
-
-def create_mock_ergast_response(columns):
-    """Create mock Ergast response with specified columns."""
-    return MockErgastMultiResponse(pd.DataFrame(columns=columns))
 
 
 @pytest.mark.asyncio
@@ -105,48 +93,13 @@ async def test_async_update_data(hass: HomeAssistant):
             mock_get_event_schedule.return_value = mock_schedule_df
 
             # Create mock DataFrames
-            pd.DataFrame(
-                data={
-                    "mock_data": [
-                        [
-                            "position",
-                            "points",
-                            "givenName",
-                            "familyName",
-                            "constructorNames",
-                        ]
-                    ]
-                }
-            )
-            # mock_constructor_standings_df = [pd.DataFrame(columns=["position", "points", "constructorName"])]
-            mock_constructor_standings_df = create_mock_ergast_response(
-                [
-                    "position",
-                    "points",
-                    "constructorName",
-                    "positionText",
-                    "wins",
-                    "constructorId",
-                    "constructorUrl",
-                    "constructorNationality",
-                ]
-            )
-            pd.DataFrame(
-                data={
-                    "mock_data": [
-                        ["position", "constructorName", "givenName", "familyName"]
-                    ]
-                }
-            )
-            pd.DataFrame(
-                data={"mock_data": [["round", "raceName", "country", "raceDate"]]}
-            )
 
             # Set up the mock return values
             # mock_ergast_instance.get_driver_standings.return_value = mock_driver_standings_df
             mock_ergast_instance.get_constructor_standings.return_value = (
-                mock_constructor_standings_df
+                create_mock_constructor_standings()
             )
+
             # mock_ergast_instance.get_last_race_results = AsyncMock(side_effect=await async_mock_return(mock_last_race_results_df))
             # mock_ergast_instance.get_last_race_info = AsyncMock(side_effect=await async_mock_return(mock_last_race_info_df))
 
@@ -160,9 +113,11 @@ async def test_async_update_data(hass: HomeAssistant):
             # Verify the data
             # assert data["schedule"].equals(mock_schedule_df)
             assert data["schedule"].equals(mock_schedule_df)
-            assert data["driver_standings"].equals(
+            assert data["constructor_standings"].equals(
                 pd.DataFrame(columns=["position", "points", "constructorName"])
             )
+
+            # print(type(data["constructor_standings"]))
             # print(type(data["constructor_standings"]))
             # assert data["constructor_standings"].equals(create_mock_ergast_response(["position", "points", "constructorName"]))
             # assert data["last_race_results"].equals(mock_last_race_results_df)
