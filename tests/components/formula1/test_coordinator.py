@@ -31,21 +31,25 @@ def create_mock_ergast_response(columns):
 
 def create_mock_schedule():
     """Create mock schedule DataFrame with predefined columns."""
-    return pd.DataFrame(
-        {
-            "Location": [""],
-            "OfficialEventName": [""],
-            "EventDate": [""],
-            "EventFormat": [""],
-            "Session1DateUtc": [""],
-            "Session2DateUtc": [""],
-            "Session3DateUtc": [""],
-            "Session4DateUtc": [""],
-            "Session5DateUtc": [""],
-            "F1ApiSupport": [""],
-            "Session5": [""],
-        }
-    )
+    columns = [
+        "RoundNumber",
+        "EventName",
+        "Country",
+        "Location",
+        "Session1",
+        "Session1Date",
+        "Session2",
+        "Session2Date",
+        "Session3",
+        "Session3Date",
+        "Session4",
+        "Session4Date",
+        "Session5",
+        "Session5Date",
+    ]
+
+    # Create an empty DataFrame with these columns
+    return pd.DataFrame(columns=columns)
 
 
 def create_mock_constructor_standings():
@@ -55,26 +59,12 @@ def create_mock_constructor_standings():
             "position",
             "points",
             "constructorName",
-            "positionText",
             "wins",
-            "constructorId",
-            "constructorUrl",
-            "constructorNationality",
         ]
     )
 
 
-def create_mock_constructor_standings_after():
-    """Create mock constructor standings with reduced columns."""
-    return MockErgastMultiResponse(
-        pd.DataFrame(
-            {
-                "position": [1, 2],
-                "points": [100, 80],
-                "constructorName": ["Team A", "Team B"],
-            }
-        )
-    )
+# def create_mock_driver_standings():
 
 
 @pytest.mark.asyncio

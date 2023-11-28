@@ -73,7 +73,7 @@ class F1Coordinator(DataUpdateCoordinator):
         -------
         DataFrame with columns:
 
-        RoundNumber, Country, Location, Session1, Session1Date,
+        EventName, RoundNumber, Country, Location, Session1, Session1Date,
         Session2, Session2Date,  Session3, Session3Date,  Session4, Session4Date,  Session5, Session5Date
         """
 
@@ -83,6 +83,7 @@ class F1Coordinator(DataUpdateCoordinator):
         schedule = schedule[
             [
                 "RoundNumber",
+                "EventName",
                 "Country",
                 "Location",
                 "Session1",
