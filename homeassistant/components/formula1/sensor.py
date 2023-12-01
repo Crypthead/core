@@ -18,12 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SensorType(Enum):
-    """Specifies what information the F1Sensor displays."""
+    """Specifies the type of F1Sensor used."""
 
-    DRIVER_STANDINGS = 1
-    CONSTRUCTOR_STANDINGS = 2
-    LAST_RACE_WINNER = 3
-    LAST_RACE_FINAL_POSITIONS = 4
+    DRIVER_STANDINGS = 1  # Sensor shows the standings of the driver
+    CONSTRUCTOR_STANDINGS = 2  # Sensor shows the standings of the constructor
+    LAST_RACE_WINNER = 3  # Sensor shows the winner of the last race
+    LAST_RACE_RESULTING_POSITIONS = 4  # Sensor shows the results of the last race
 
 
 async def async_setup_entry(
@@ -53,10 +53,11 @@ async def async_setup_entry(
 
     if entry.data.get("show_last_results", False):
         entities_to_add.append(
-            F1Sensor(coordinator, entry, SensorType.LAST_RACE_FINAL_POSITIONS)
+            F1Sensor(coordinator, entry, SensorType.LAST_RACE_RESULTING_POSITIONS)
         )
 
     if entities_to_add:
+        _LOGGER.debug("Adding %d sensors", len(entities_to_add))
         async_add_entities(entities_to_add)
 
 
@@ -73,15 +74,18 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.sensor_type = sensor_type
+        self.sensor_type = sensor_type  # Used for the sensor to choose its behaviour
         self._attr_unique_id = sensor_type.name
 
-        self.last_date_changed = None
-        self.last_winner = ""
+        self.last_date_changed = (
+            None  # Used to indicate the recency of data that is displayed
+        )
+        self.last_winner = ""  # Used to indicate the winner of the last race
+        _LOGGER.debug("Sensor of type %s set up", self.sensor_type.name)
 
     @property
     def native_value(self) -> str:
-        """Returns the last time the standings have changed or the last winner."""
+        """Returns the last time the standings have changed or the last winner, depending on the type of the sensor."""
         if self.sensor_type == SensorType.LAST_RACE_WINNER:
             return self.last_winner
         if self.last_date_changed:
@@ -90,9 +94,10 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
+        """Return the state attributes, which depend on the type of sensor."""
         self.last_date_changed = self.coordinator.data["last_race_info"]["raceDate"]
 
+        # Choose from where and how to extract the information relevant to the given sensor type
         match self.sensor_type:
             case SensorType.DRIVER_STANDINGS:
                 data = self.coordinator.data["driver_standings"]
@@ -102,7 +107,7 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
                 data = self.coordinator.data["constructor_standings"]
                 name_column = "constructorName"
                 result_column = "points"
-            case SensorType.LAST_RACE_FINAL_POSITIONS:
+            case SensorType.LAST_RACE_RESULTING_POSITIONS:
                 data = self.coordinator.data["last_race_results"]
                 name_column = "familyName"
             case SensorType.LAST_RACE_WINNER:
@@ -111,20 +116,25 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
                 ].iloc[0]
                 return self.coordinator.data["last_race_info"]
 
-        attrs = {}
+        attrs = {}  # Results of the method
         if self.sensor_type in [
             SensorType.DRIVER_STANDINGS,
             SensorType.CONSTRUCTOR_STANDINGS,
         ]:
+            # Populate results
             for position, standing in data.iterrows():
                 attrs[f"{position + 1} - {standing[name_column]}"] = standing[
                     result_column
                 ]
 
         else:
+            # Populate results
             for position, standing in data.iterrows():
                 attrs[position] = standing[name_column]
 
+        _LOGGER.debug(
+            "Sensor of type %s returning: %s", self.sensor_type.name, str(attrs)
+        )
         return attrs
 
     @property
@@ -137,7 +147,7 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
                 return "Formula 1 constructors standings"
             case SensorType.LAST_RACE_WINNER:
                 return "Formula 1 last race winner"
-            case SensorType.LAST_RACE_FINAL_POSITIONS:
+            case SensorType.LAST_RACE_RESULTING_POSITIONS:
                 return "Formula 1 last race results"
             case _:
                 return ""
