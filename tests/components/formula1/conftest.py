@@ -46,7 +46,15 @@ async def f1_coordinator(hass):
     # Mock the API methods
     with patch.object(
         F1Coordinator, "_get_schedule", new_callable=AsyncMock
-    ) as mock_schedule:
+    ) as mock_schedule, patch.object(
+        F1Coordinator, "_get_driver_standings", new_callable=AsyncMock
+    ) as mock_driver_standings, patch.object(
+        F1Coordinator, "_get_constructor_standings", new_callable=AsyncMock
+    ) as mock_constructor_standings, patch.object(
+        F1Coordinator, "_get_last_race_results", new_callable=AsyncMock
+    ) as mock_last_race_results, patch.object(
+        F1Coordinator, "_get_last_race_info", new_callable=AsyncMock
+    ) as mock_last_race_info:
         # Set return values for the mock methods
         mock_schedule.return_value = pd.DataFrame(
             {
@@ -65,10 +73,40 @@ async def f1_coordinator(hass):
                 "Country": ["Test Country"],
             }
         )
-        # mock_driver_standings.return_value = ...
-        # mock_constructor_standings.return_value = ...
-        # mock_last_race_results.return_value = ...
-        # mock_last_race_info.return_value = ...
+
+        mock_driver_standings.return_value = pd.DataFrame(
+            data={
+                "position": [1],
+                "points": [25],
+                "givenName": ["Lewis"],
+                "familyName": ["Hamilton"],
+                "constructorNames": ["Mercedes"],
+            }
+        )
+
+        mock_constructor_standings.return_value = pd.DataFrame(
+            data={
+                "position": [1, 2],
+                "points": [25, 18],
+                "constructorName": ["Ferrari", "Williams"],
+            }
+        )
+
+        mock_last_race_results.return_value = pd.DataFrame(
+            data={
+                "position": [1],
+                "constructorName": ["Ferrari"],
+                "givenName": ["Sebastian"],
+                "familyName": ["Vettel"],
+            }
+        )
+
+        mock_last_race_info.return_value = {
+            "round": 1,
+            "raceName": "Australian Grand Prix",
+            "country": "Australia",
+            "raceDate": Timestamp("2023-11-26 00:00:00"),
+        }
 
         # Initialize the coordinator
         coordinator = F1Coordinator(hass)
