@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.formula1 import (
     DOMAIN,
+    async_remove_entry,
     async_setup_entry,
     async_unload_entry,
 )
@@ -74,3 +75,17 @@ async def test_async_unload_entry(hass: HomeAssistant, config_entry, f1_coordina
 
         assert result is False
         # The entry would still be in hass.data if unload was unsuccessful
+
+
+@pytest.mark.asyncio
+async def test_async_remove_entry(hass: HomeAssistant, config_entry):
+    """Test that removing an entry works."""
+
+    # Initialize hass.data[DOMAIN]
+    hass.data[DOMAIN] = {"initialized": True}
+
+    # Call async_remove_entry
+    await async_remove_entry(hass, config_entry)
+
+    # Assert that 'initialized' is set to False
+    assert hass.data[DOMAIN]["initialized"] is False
