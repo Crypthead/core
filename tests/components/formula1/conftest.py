@@ -117,38 +117,6 @@ async def f1_coordinator(hass):
         yield coordinator
 
 
-@pytest.fixture(name="coordinator")
-def coordinator_fixtore():
-    """Create an F1 coordinator fixture."""
-
-    class MockF1Coordinator:
-        data = {
-            "schedule": pd.DataFrame(
-                [
-                    {
-                        "EventName": "Test Event",
-                        "Session1Date": Timestamp(MOCK_DATETIME + timedelta(days=1)),
-                        "Session2Date": Timestamp(MOCK_DATETIME + timedelta(days=2)),
-                        "Session3Date": Timestamp(MOCK_DATETIME + timedelta(days=3)),
-                        "Session4Date": Timestamp(
-                            MOCK_DATETIME + timedelta(days=3, hours=5)
-                        ),
-                        "Session5Date": Timestamp(MOCK_DATETIME + timedelta(days=5)),
-                        "Session5": "Session5",
-                        "Session4": "Session4",
-                        "Session3": "Session3",
-                        "Session2": "Session2",
-                        "Session1": "Session1",
-                        "RoundNumber": "1",
-                        "Country": "Test Country",
-                    }
-                ]
-            )
-        }
-
-    return MockF1Coordinator()
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""

@@ -7,7 +7,7 @@ from homeassistant.components.formula1.calendar import Formula1Calendar
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-pytestmark = pytest.mark.usefixtures("config_entry", "coordinator", "f1_coordinator")
+pytestmark = pytest.mark.usefixtures("config_entry", "f1_coordinator")
 
 
 MOCK_DATETIME = dt_util.as_utc(datetime(2017, 11, 27, 0, 0, 0))
