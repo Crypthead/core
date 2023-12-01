@@ -1,4 +1,4 @@
-"""Example integration using DataUpdateCoordinator."""
+"""Formula 1 coordinator."""
 # pylint: disable=broad-exception-caught
 from datetime import timedelta
 import logging
