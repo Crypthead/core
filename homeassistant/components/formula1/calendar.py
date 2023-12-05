@@ -29,12 +29,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up F1 based on a config entry."""
-
-    if not entry.data["show_calendar"]:
-        return
-
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([Formula1Calendar(coordinator, entry)])
+
+    if entry.data["show_calendar"]:
+        async_add_entities([Formula1Calendar(coordinator, entry)])
 
 
 class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):

@@ -1,6 +1,6 @@
 """Common fixtures for the formula1 tests."""
 from collections.abc import Generator
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pandas as pd
@@ -37,7 +37,7 @@ def config_entry_fixture():
     )
 
 
-MOCK_DATETIME = dt_util.as_utc(datetime(2017, 11, 27, 0, 0, 0))
+MOCK_DATETIME = dt_util.now(time_zone=dt_util.UTC)
 
 
 @pytest.fixture(name="f1_coordinator")
