@@ -1,16 +1,14 @@
 """Test the formula1 calendar platform."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 
 from homeassistant.components.formula1.calendar import Formula1Calendar
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+
+from .conftest import MOCK_DATETIME
 
 pytestmark = pytest.mark.usefixtures("config_entry", "f1_coordinator")
-
-
-MOCK_DATETIME = dt_util.as_utc(datetime(2017, 11, 27, 0, 0, 0))
 
 
 def test_create_calendar_event(hass: HomeAssistant, config_entry, f1_coordinator):
@@ -63,3 +61,17 @@ async def test_async_get_events_all_events(
         hass, MOCK_DATETIME, MOCK_DATETIME + timedelta(days=10)
     )
     assert len(events) == 5
+
+
+@pytest.mark.asyncio
+async def test_calendar_setup(hass: HomeAssistant, config_entry):
+    """Test async_get_events with all event types."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    attributes = dict(hass.states.get("calendar.formula_1_calendar").attributes)
+
+    assert attributes["message"] == "Test Event, Session5, 1 rounds"
+    assert attributes["all_day"] is False
+    assert attributes["location"] == "Test Country"
