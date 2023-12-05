@@ -160,9 +160,12 @@ async def test_async_update_data_exception(hass: HomeAssistant):
     with patch.object(
         F1Coordinator,
         "_get_schedule",
-        new=AsyncMock(side_effect=Exception("Test Exception")),
+        new=AsyncMock(side_effect=Exception("Error fetching Schedule")),
     ):
         f1_coordinator = F1Coordinator(hass)
+
+        # Call coordinator and wait for exception
         with pytest.raises(Exception) as excinfo:
             await f1_coordinator.async_config_entry_first_refresh()
-        assert "Test Exception" in str(excinfo.value)
+
+        assert "Error fetching Schedule" in str(excinfo.value)
