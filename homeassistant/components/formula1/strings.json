@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure the integration",
-        "description": "Select what you are interested in",
+        "title": "Configure the Formula 1 integration",
+        "description": "Select what events you are interested in",
         "data": {
           "show_calendar": "Add a Calendar for events",
           "show_driver_standings": "Add a Sensor for all driver standings in Formula 1",
@@ -13,10 +13,10 @@
         }
       },
       "calendar": {
-        "title": "Configure the calendar",
-        "description": "Select what you are interested in",
+        "title": "Configure the formula 1 calendar",
+        "description": "Select what events you are interested in",
         "data": {
-          "only_show_race_event": "Only include track race events in the calendar"
+          "only_show_race_event": "I only want track races to be included in the calendar events"
         }
       }
     },
