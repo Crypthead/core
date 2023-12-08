@@ -13,10 +13,10 @@
         }
       },
       "calendar": {
-        "title": "Configure the formula 1 calendar",
-        "description": "Select what events you are interested in",
+        "title": "Configure the formula 1 calendar events",
+        "description": "Select what race types you want included in the calendar events",
         "data": {
-          "only_show_race_event": "I only want track races to be included in the calendar events"
+          "only_show_race_event": "I only want track races to be included in the calendar events, this exludes practice, sprints, sprint shootouts and qualifying races."
         }
       }
     },
