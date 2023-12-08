@@ -5,6 +5,8 @@ import logging
 
 import fastf1
 from fastf1.ergast import Ergast
+import pandas as pd
+import python_weather
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
@@ -51,15 +53,26 @@ class F1Coordinator(DataUpdateCoordinator):
 
             last_race_info = await self._get_last_race_info()
 
+            next_weekend_weather = await self._get_weather_next_race_weekend()
+
             data_dict = {
                 "schedule": schedule,
                 "driver_standings": driver_standings,
                 "constructor_standings": constructor_standings,
                 "last_race_results": last_race_results,
                 "last_race_info": last_race_info,
+                "next_weekend_weather": next_weekend_weather,
             }
 
-            _LOGGER.info("FETCH F1 DATA %s", data_dict)
+            _LOGGER.info("\nSCHEDULE: %s", data_dict["schedule"])
+            _LOGGER.info("\nDRIVER STANDINGS: %s", data_dict["driver_standings"])
+            _LOGGER.info(
+                "\nCONSTRUCTOR STANDINGS: %s", data_dict["constructor_standings"]
+            )
+            _LOGGER.info("\nLAST RACE RESULTS: %s", data_dict["last_race_results"])
+            _LOGGER.info("\nLAST RACE INFO: %s", data_dict["last_race_info"])
+            _LOGGER.info("\nNEXT WEEKEND WEATHER %s", data_dict["next_weekend_weather"])
+
             return data_dict
 
         except Exception as e:
@@ -191,3 +204,80 @@ class F1Coordinator(DataUpdateCoordinator):
         last_race = last_race[["round", "raceName", "country", "raceDate"]]
 
         return last_race.to_dict(orient="records")[0]
+
+    async def _get_weather_helper(self, location, sessions):
+        """Temp."""
+        async with python_weather.Client(unit=python_weather.METRIC) as client:
+            weather = await client.get(location)
+
+            newTuplelist = []
+
+            for session in sessions:
+                for forecast in weather.forecasts:
+                    if pd.Timestamp(forecast.date).date() == session[1].date():
+                        for h_f in forecast.hourly:
+                            if abs(h_f.time.hour - session[1].time().hour) < 1:
+                                newTuplelist.append(
+                                    (
+                                        session[0],
+                                        ""
+                                        + str(h_f.description)
+                                        + ", "
+                                        + str(h_f.temperature)
+                                        + "℃",
+                                    )
+                                )
+            return newTuplelist
+
+    async def _get_weather_next_race_weekend(self):
+        """Temp."""
+
+        # This one sets fake dates so that we actually can test it
+        fakeDates = True
+
+        # GET REMAINING EVENTS
+        rem_events = fastf1.get_events_remaining(
+            dt_util.now().today()
+            if not fakeDates
+            else dt_util.parse_datetime("2023-11-23 12:00")
+        )  # <- can use fakedates
+
+        if len(rem_events) < 1:
+            return [("No more events this season", "-")]
+
+        # Pick out the information of interest
+        events = rem_events[
+            [
+                "Location",
+                "Session1",
+                "Session1Date",
+                "Session2",
+                "Session2Date",
+                "Session3",
+                "Session3Date",
+                "Session4",
+                "Session4Date",
+                "Session5",
+                "Session5Date",
+            ]
+        ]
+        next_event = events.iloc[0]
+
+        lista = []
+
+        for i in range(len(next_event) // 2):
+            lista.append(
+                (
+                    next_event[["Location"]].item()
+                    + ": "
+                    + next_event[["Session" + str(i + 1)]].item(),
+                    next_event[["Session" + str(i + 1) + "Date"]].item()
+                    if not fakeDates
+                    else pd.Timestamp(dt_util.now().today()),
+                )  # <- can use fakedates
+            )
+
+        location = next_event[["Location"]].item()
+
+        w = await self._get_weather_helper(location, lista)
+        return w
