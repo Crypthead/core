@@ -34,14 +34,17 @@ class F1Coordinator(DataUpdateCoordinator):
 
         Returns
         -------
-        Dictionary containing 5 DataFrames:
-        - schedule
-        - driver_standings
-        - constructor_standings
-        - last_race_results
-        - last_race_info
-
+        Dictionary containing the information:
+        - schedule:                 dataframe
+        - driver_standings:         dataframe
+        - constructor_standings:    dataframe
+        - last_race_results:        dataframe
+        - last_race_info:           dict
+        - next_weekend_weather:     [(str, str)]
         """
+
+        _LOGGER.info("Fetching Formula 1 data")
+
         try:
             schedule = await self._get_schedule()
 
@@ -64,19 +67,13 @@ class F1Coordinator(DataUpdateCoordinator):
                 "next_weekend_weather": next_weekend_weather,
             }
 
-            _LOGGER.info("\nSCHEDULE: %s", data_dict["schedule"])
-            _LOGGER.info("\nDRIVER STANDINGS: %s", data_dict["driver_standings"])
-            _LOGGER.info(
-                "\nCONSTRUCTOR STANDINGS: %s", data_dict["constructor_standings"]
-            )
-            _LOGGER.info("\nLAST RACE RESULTS: %s", data_dict["last_race_results"])
-            _LOGGER.info("\nLAST RACE INFO: %s", data_dict["last_race_info"])
-            _LOGGER.info("\nNEXT WEEKEND WEATHER %s", data_dict["next_weekend_weather"])
+            _LOGGER.info("Successfully fetched Formula 1 data")
+            _LOGGER.info("\n %s", data_dict)
 
             return data_dict
 
         except Exception as e:
-            _LOGGER.error("Error fetching F1 data: %s", e)
+            _LOGGER.error("Error fetching Formula 1 data: %s", e)
             raise
 
     async def _get_schedule(self):
@@ -206,42 +203,70 @@ class F1Coordinator(DataUpdateCoordinator):
         return last_race.to_dict(orient="records")[0]
 
     async def _get_weather_helper(self, location, sessions):
-        """Temp."""
+        """Get weather (description and temp) at location for the sessions.
+
+        Returns
+        -------
+        list with a tuple per session in the coming race weekend:
+
+        [(location and session, weather information)]
+        """
+
         async with python_weather.Client(unit=python_weather.METRIC) as client:
             weather = await client.get(location)
 
-            newTuplelist = []
+            # List of tuples of (location and) session and the weather there and then
+            sessionAndWeather = []
 
+            # Go through all race weekend sessions and find a close enough (hourly) forecast
             for session in sessions:
                 for forecast in weather.forecasts:
                     if pd.Timestamp(forecast.date).date() == session[1].date():
-                        for h_f in forecast.hourly:
-                            if abs(h_f.time.hour - session[1].time().hour) < 1:
-                                newTuplelist.append(
+                        for hourly_forecast in forecast.hourly:
+                            if (
+                                abs(hourly_forecast.time.hour - session[1].time().hour)
+                                < 2
+                            ):
+                                sessionAndWeather.append(
                                     (
-                                        session[0],
+                                        session[0],  # session location and description
                                         ""
-                                        + str(h_f.description)
+                                        + str(
+                                            hourly_forecast.description
+                                        )  # weather description
                                         + ", "
-                                        + str(h_f.temperature)
+                                        + str(
+                                            hourly_forecast.temperature
+                                        )  # temperature
                                         + "℃",
                                     )
                                 )
-            return newTuplelist
+            return sessionAndWeather
 
     async def _get_weather_next_race_weekend(self):
-        """Temp."""
+        """Get weather information for each session of the coming race weekend.
+
+        Returns
+        -------
+        list with a tuple per session in the coming race weekend:
+
+        [(location and session, weather information)]
+        """
+
+        _LOGGER.info("Fetching weather information for coming race weekend")
 
         # This one sets fake dates so that we actually can test it
         fakeDates = True
 
-        # GET REMAINING EVENTS
+        # Fetch remaining formula 1 events (for this year/season)
         rem_events = fastf1.get_events_remaining(
             dt_util.now().today()
+            # Use fake dates if we want to show that it works after the season is over
             if not fakeDates
             else dt_util.parse_datetime("2023-11-23 12:00")
-        )  # <- can use fakedates
+        )
 
+        # If the season is over, we have no coming events
         if len(rem_events) < 1:
             return [("No more events this season", "-")]
 
@@ -261,23 +286,29 @@ class F1Coordinator(DataUpdateCoordinator):
                 "Session5Date",
             ]
         ]
+
+        # Pick out specifically the next coming event
         next_event = events.iloc[0]
 
-        lista = []
+        # List of tuples of (location and) session and each sessions date and time
+        sessionsAndDates = []
 
         for i in range(len(next_event) // 2):
-            lista.append(
+            sessionsAndDates.append(
                 (
-                    next_event[["Location"]].item()
+                    next_event[["Location"]].item()  # location
                     + ": "
-                    + next_event[["Session" + str(i + 1)]].item(),
-                    next_event[["Session" + str(i + 1) + "Date"]].item()
-                    if not fakeDates
-                    else pd.Timestamp(dt_util.now().today()),
-                )  # <- can use fakedates
+                    + next_event[
+                        ["Session" + str(i + 1)]
+                    ].item(),  # session name (e.g. "qualifying", "race")
+                    next_event[
+                        ["Session" + str(i + 1) + "Date"]
+                    ].item()  # session date and time
+                    # Use fake dates if we want to show that it works after the season is over
+                    if not fakeDates else pd.Timestamp(dt_util.now().today()),
+                )
             )
 
         location = next_event[["Location"]].item()
 
-        w = await self._get_weather_helper(location, lista)
-        return w
+        return await self._get_weather_helper(location, sessionsAndDates)
