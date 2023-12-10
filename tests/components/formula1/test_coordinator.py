@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.formula1.coordinator import F1Coordinator
 from homeassistant.core import HomeAssistant
+import homeassistant.util.dt as dt_util
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -50,6 +51,100 @@ def create_mock_schedule():
 
     # Create an empty DataFrame with these columns
     return pd.DataFrame(columns=columns)
+
+
+def create_get_events_no_remaining():
+    """Create mock for remaining events (no events)."""
+    columns = [
+        "EventName",
+        "Location",
+        "Session1",
+        "Session1Date",
+        "Session2",
+        "Session2Date",
+        "Session3",
+        "Session3Date",
+        "Session4",
+        "Session4Date",
+        "Session5",
+        "Session5Date",
+    ]
+
+    # Create an DataFrame with the data
+    return pd.DataFrame(columns=columns)
+
+
+def create_get_events_remaining():
+    """Create mock for remaining events (only one event)."""
+    data = {
+        "EventName": ["Swedish Grand Prix"],
+        "Location": ["Gotland"],
+        "Session1": ["Practice 1"],
+        "Session1Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+        "Session2": ["Practice 2"],
+        "Session2Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+        "Session3": ["Practice 3"],
+        "Session3Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+        "Session4": ["Qualifying"],
+        "Session4Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+        "Session5": ["Race"],
+        "Session5Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+    }
+
+    # Create an DataFrame with the data
+    return pd.DataFrame(data)
+
+
+class Client:
+    """Mock weather client."""
+
+    async def __aenter__(self, *args):
+        """Mock."""
+        return self
+
+    async def __aexit__(self, *args):
+        """Mock."""
+        pass
+
+    async def get(self, *args):
+        """Mock."""
+        return Weather()
+
+
+class Weather:
+    """Mock Weather object."""
+
+    forecasts = []
+
+    def __init__(self):
+        """Mock."""
+        self.forecasts = [DailyForecast(), DailyForecast(), DailyForecast()]
+
+
+class DailyForecast:
+    """Mock Daily Forecast."""
+
+    date = None
+    hourly = None
+
+    def __init__(self):
+        """Mock."""
+        self.date = dt_util.parse_date("2023-04-11")
+        self.hourly = [HourlyForecast(), HourlyForecast(), HourlyForecast()]
+
+
+class HourlyForecast:
+    """Mock Hourly Forecast."""
+
+    time = None
+    description = None
+    temperature = None
+
+    def __init__(self):
+        """Mock."""
+        self.time = dt_util.parse_datetime("2023-04-11 15:00")
+        self.description = "Snowy"
+        self.temperature = -5
 
 
 def create_mock_constructor_standings():
@@ -101,8 +196,14 @@ async def test_async_update_data(hass: HomeAssistant):
         # Mocking fastf1 method "get_event_schedule()"
         with patch(
             "homeassistant.components.formula1.coordinator.fastf1.get_event_schedule"
-        ) as mock_get_event_schedule:
+        ) as mock_get_event_schedule, patch(
+            "homeassistant.components.formula1.coordinator.fastf1.get_events_remaining"
+        ) as mock_get_events_remaining, patch(
+            "homeassistant.components.formula1.coordinator.python_weather.Client"
+        ) as mock_get_weather:
             mock_get_event_schedule.return_value = create_mock_schedule()
+            mock_get_events_remaining.return_value = create_get_events_remaining()
+            mock_get_weather.return_value = Client()
 
             # Set up the mock return values for each API function call
             mock_ergast_instance.get_constructor_standings.return_value = (
@@ -151,6 +252,36 @@ async def test_async_update_data(hass: HomeAssistant):
             assert (
                 actual_keys == expected_keys
             ), "The keys in last_race_info do not match the expected keys."
+
+            assert data["next_weekend_weather"] == [
+                ("(2023-04-11) Swedish Grand Prix: Practice 1", "Snowy, -5C°"),
+                ("(2023-04-11) Swedish Grand Prix: Practice 2", "Snowy, -5C°"),
+                ("(2023-04-11) Swedish Grand Prix: Practice 3", "Snowy, -5C°"),
+                ("(2023-04-11) Swedish Grand Prix: Qualifying", "Snowy, -5C°"),
+                ("(2023-04-11) Swedish Grand Prix: Race", "Snowy, -5C°"),
+            ]
+
+
+@pytest.mark.asyncio
+async def test_coordinator_next_event_season_over(hass: HomeAssistant):
+    """Test for coordinator getting weather for the next race weekend, when there are no more race weekends in the season."""
+
+    # Mocking fastf1 method "get_event_schedule()"
+    with patch(
+        "homeassistant.components.formula1.coordinator.fastf1.get_events_remaining"
+    ) as mock_get_events_remaining, patch(
+        "homeassistant.components.formula1.coordinator.python_weather.Client"
+    ) as mock_get_weather:
+        mock_get_events_remaining.return_value = create_get_events_no_remaining()
+        mock_get_weather.return_value = Client()
+
+        # Fetch data from coordinator
+        coordinator = F1Coordinator(hass)
+        data = await coordinator._async_update_data()
+
+        assert data["next_weekend_weather"] == [
+            ("Season is over, no more race weekends", "-")
+        ]
 
 
 @pytest.mark.asyncio

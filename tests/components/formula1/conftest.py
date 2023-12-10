@@ -54,7 +54,9 @@ async def f1_coordinator(hass):
         F1Coordinator, "_get_last_race_results", new_callable=AsyncMock
     ) as mock_last_race_results, patch.object(
         F1Coordinator, "_get_last_race_info", new_callable=AsyncMock
-    ) as mock_last_race_info:
+    ) as mock_last_race_info, patch.object(
+        F1Coordinator, "_get_weather_next_race_weekend", new_callable=AsyncMock
+    ) as mock_weather_next_race:
         # Set return values for the mock methods
         mock_schedule.return_value = pd.DataFrame(
             {
@@ -107,6 +109,14 @@ async def f1_coordinator(hass):
             "country": "Australia",
             "raceDate": Timestamp("2023-11-26 00:00:00"),
         }
+
+        mock_weather_next_race.return_value = [
+            ("(2023-12-8) Swedish Grand Prix: Practice 1", "Snowy, -5C°"),
+            ("(2023-12-8) Swedish Grand Prix: Practice 2", "Snowy, -5C°"),
+            ("(2023-12-9) Swedish Grand Prix: Practice 3", "Snowy, -5C°"),
+            ("(2023-12-9) Swedish Grand Prix: Qualifying", "Snowy, -5C°"),
+            ("(2023-12-10) Swedish Grand Prix: Race", "Snowy, -5C°"),
+        ]
 
         # Initialize the coordinator
         coordinator = F1Coordinator(hass)

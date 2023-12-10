@@ -5,7 +5,6 @@ import logging
 
 import fastf1
 from fastf1.ergast import Ergast
-import pandas as pd
 import python_weather
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -202,47 +201,6 @@ class F1Coordinator(DataUpdateCoordinator):
 
         return last_race.to_dict(orient="records")[0]
 
-    async def _get_weather_helper(self, location, sessions):
-        """Get weather (description and temp) at location for the sessions.
-
-        Returns
-        -------
-        list with a tuple per session in the coming race weekend:
-
-        [(location and session, weather information)]
-        """
-
-        async with python_weather.Client(unit=python_weather.METRIC) as client:
-            weather = await client.get(location)
-
-            # List of tuples of (location and) session and the weather there and then
-            sessionAndWeather = []
-
-            # Go through all race weekend sessions and find a close enough (hourly) forecast
-            for session in sessions:
-                for forecast in weather.forecasts:
-                    if pd.Timestamp(forecast.date).date() == session[1].date():
-                        for hourly_forecast in forecast.hourly:
-                            if (
-                                abs(hourly_forecast.time.hour - session[1].time().hour)
-                                < 2
-                            ):
-                                sessionAndWeather.append(
-                                    (
-                                        session[0],  # session location and description
-                                        ""
-                                        + str(
-                                            hourly_forecast.description
-                                        )  # weather description
-                                        + ", "
-                                        + str(
-                                            hourly_forecast.temperature
-                                        )  # temperature
-                                        + "℃",
-                                    )
-                                )
-            return sessionAndWeather
-
     async def _get_weather_next_race_weekend(self):
         """Get weather information for each session of the coming race weekend.
 
@@ -250,65 +208,68 @@ class F1Coordinator(DataUpdateCoordinator):
         -------
         list with a tuple per session in the coming race weekend:
 
-        [(location and session, weather information)]
+        [(location and session, weather information)]: [(String, String)]
         """
 
-        _LOGGER.info("Fetching weather information for coming race weekend")
+        # SETTING THIS TO TRUE WILL SET FAKE DATES IN THE NEXT RACE WEEKEND WEATHER SO WE ACTUALLY GET AN EVENT TO SHOW OFF
+        TEST = False
 
-        # This one sets fake dates so that we actually can test it
-        fakeDates = True
-
-        # Fetch remaining formula 1 events (for this year/season)
-        rem_events = fastf1.get_events_remaining(
+        # Fetch the remaining events (race weekend)
+        rem_events = await self.hass.async_add_executor_job(
+            fastf1.get_events_remaining,
             dt_util.now().today()
-            # Use fake dates if we want to show that it works after the season is over
-            if not fakeDates
-            else dt_util.parse_datetime("2023-11-23 12:00")
+            if not TEST
+            else dt_util.parse_datetime("2023-6-1 1:00"),
         )
 
-        # If the season is over, we have no coming events
-        if len(rem_events) < 1:
-            return [("No more events this season", "-")]
+        # If we get no events, the season is over and we cannot check weather
+        if len(rem_events) <= 0:
+            return [("Season is over, no more race weekends", "-")]
 
-        # Pick out the information of interest
-        events = rem_events[
-            [
-                "Location",
-                "Session1",
-                "Session1Date",
-                "Session2",
-                "Session2Date",
-                "Session3",
-                "Session3Date",
-                "Session4",
-                "Session4Date",
-                "Session5",
-                "Session5Date",
-            ]
-        ]
+        # We're only interested in the next event
+        next_event = rem_events.iloc[0]
 
-        # Pick out specifically the next coming event
-        next_event = events.iloc[0]
+        # Get weather at location of event
+        async with python_weather.Client(unit=python_weather.METRIC) as client:
+            weather = await client.get(next_event[["Location"]].item())
 
-        # List of tuples of (location and) session and each sessions date and time
-        sessionsAndDates = []
+        # List to be filled with session descriptions and corresponding session weather information
+        sessionsWeather = [None] * 5
 
-        for i in range(len(next_event) // 2):
-            sessionsAndDates.append(
-                (
-                    next_event[["Location"]].item()  # location
-                    + ": "
-                    + next_event[
-                        ["Session" + str(i + 1)]
-                    ].item(),  # session name (e.g. "qualifying", "race")
-                    next_event[
-                        ["Session" + str(i + 1) + "Date"]
-                    ].item()  # session date and time
-                    # Use fake dates if we want to show that it works after the season is over
-                    if not fakeDates else pd.Timestamp(dt_util.now().today()),
-                )
+        # Go through all sessions for the next event and find the closest forecast
+        for i in range(1, 6):
+            # Pick out each session's title and date
+            sessionTitle = (
+                next_event[["EventName"]].item()
+                + ": "
+                + next_event[["Session" + str(i)]].item()
+            )
+            sessionDate = (
+                next_event[["Session" + str(i) + "Date"]].item()
+                if not TEST
+                else dt_util.parse_datetime("2023-12-10 17:01")
             )
 
-        location = next_event[["Location"]].item()
+            for forecast in weather.forecasts:
+                if forecast.date == sessionDate.date():
+                    best_diff = 1000
 
-        return await self._get_weather_helper(location, sessionsAndDates)
+                    for h_forecast in forecast.hourly:
+                        h_min = h_forecast.time.hour * 60 + h_forecast.time.minute
+                        s_min = sessionDate.time().hour * 60 + sessionDate.time().minute
+
+                        new_diff = abs(h_min - s_min)
+
+                        # Find the forecast closest to the session start time
+                        if new_diff < best_diff:
+                            best_diff = new_diff
+
+                            sessionsWeather[i - 1] = (
+                                "(" + str(sessionDate.date()) + ") " + sessionTitle,
+                                str(h_forecast.description)
+                                + ", "
+                                + str(h_forecast.temperature)
+                                + "C°",
+                            )
+
+        return sessionsWeather
