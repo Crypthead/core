@@ -213,7 +213,7 @@ class F1Coordinator(DataUpdateCoordinator):
 
         # SETTING THIS TO TRUE WILL SET FAKE DATES IN THE NEXT RACE WEEKEND WEATHER SO WE ACTUALLY GET AN EVENT TO SHOW OFF
         # Should only be used (Set to True) for the presentation/demo on friday 15/12
-        # Should also be removed after friday
+        # Should be removed after friday
         fake_dates = True
 
         # Fetch the remaining events (race weekend)

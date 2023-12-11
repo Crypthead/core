@@ -261,11 +261,11 @@ async def test_async_update_data(hass: HomeAssistant):
             ), "The keys in last_race_info do not match the expected keys."
 
             assert data["next_weekend_weather"] == [
-                ("(2023-04-11) Swedish Grand Prix: Practice 1", "Snowy, -4C°"),
-                ("(2023-04-11) Swedish Grand Prix: Practice 2", "Snowy, -5C°"),
-                ("(2023-04-11) Swedish Grand Prix: Practice 3", "Snowy, -6C°"),
-                ("(2023-04-11) Swedish Grand Prix: Qualifying", "Snowy, -7C°"),
-                ("(2023-04-11) Swedish Grand Prix: Race", "Snowy, -8C°"),
+                ("(2023-04-11) Swedish Grand Prix: Practice 1", "Snowy, -4°C"),
+                ("(2023-04-11) Swedish Grand Prix: Practice 2", "Snowy, -5°C"),
+                ("(2023-04-11) Swedish Grand Prix: Practice 3", "Snowy, -6°C"),
+                ("(2023-04-11) Swedish Grand Prix: Qualifying", "Snowy, -7°C"),
+                ("(2023-04-11) Swedish Grand Prix: Race", "Snowy, -8°C"),
             ]
 
 

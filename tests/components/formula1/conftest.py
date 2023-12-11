@@ -111,11 +111,11 @@ async def f1_coordinator(hass):
         }
 
         mock_weather_next_race.return_value = [
-            ("(2023-12-8) Swedish Grand Prix: Practice 1", "Snowy, -5C°"),
-            ("(2023-12-8) Swedish Grand Prix: Practice 2", "Snowy, -4C°"),
-            ("(2023-12-9) Swedish Grand Prix: Practice 3", "Snowy, -3C°"),
-            ("(2023-12-9) Swedish Grand Prix: Qualifying", "Snowy, -2C°"),
-            ("(2023-12-10) Swedish Grand Prix: Race", "Snowy, -1C°"),
+            ("(2023-12-8) Swedish Grand Prix: Practice 1", "Snowy, -5°C"),
+            ("(2023-12-8) Swedish Grand Prix: Practice 2", "Snowy, -4°C"),
+            ("(2023-12-9) Swedish Grand Prix: Practice 3", "Snowy, -3°C"),
+            ("(2023-12-9) Swedish Grand Prix: Qualifying", "Snowy, -2°C"),
+            ("(2023-12-10) Swedish Grand Prix: Race", "Snowy, -1°C"),
         ]
 
         # Initialize the coordinator
