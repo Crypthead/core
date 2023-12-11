@@ -232,7 +232,7 @@ class F1Coordinator(DataUpdateCoordinator):
         next_event = rem_events.iloc[0]
 
         # Get weather at location of event
-        async with python_weather.Client(format=python_weather.METRIC) as client:
+        async with python_weather.Client(unit=python_weather.METRIC) as client:
             weather = await client.get(next_event[["Location"]].item())
 
         # List to be filled with session descriptions and corresponding session weather information
