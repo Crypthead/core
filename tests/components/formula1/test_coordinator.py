@@ -80,15 +80,15 @@ def create_get_events_remaining():
         "EventName": ["Swedish Grand Prix"],
         "Location": ["Gotland"],
         "Session1": ["Practice 1"],
-        "Session1Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+        "Session1Date": [pd.Timestamp(2023, 4, 11, 14, 0)],
         "Session2": ["Practice 2"],
         "Session2Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
         "Session3": ["Practice 3"],
-        "Session3Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+        "Session3Date": [pd.Timestamp(2023, 4, 11, 16, 0)],
         "Session4": ["Qualifying"],
-        "Session4Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+        "Session4Date": [pd.Timestamp(2023, 4, 11, 17, 0)],
         "Session5": ["Race"],
-        "Session5Date": [pd.Timestamp(2023, 4, 11, 15, 0)],
+        "Session5Date": [pd.Timestamp(2023, 4, 11, 18, 0)],
     }
 
     # Create an DataFrame with the data
@@ -130,7 +130,13 @@ class DailyForecast:
     def __init__(self):
         """Mock."""
         self.date = dt_util.parse_date("2023-04-11")
-        self.hourly = [HourlyForecast(), HourlyForecast(), HourlyForecast()]
+        self.hourly = [
+            HourlyForecast(14),
+            HourlyForecast(15),
+            HourlyForecast(16),
+            HourlyForecast(17),
+            HourlyForecast(18),
+        ]
 
 
 class HourlyForecast:
@@ -140,11 +146,12 @@ class HourlyForecast:
     description = None
     temperature = None
 
-    def __init__(self):
+    def __init__(self, hour):
         """Mock."""
-        self.time = dt_util.parse_datetime("2023-04-11 15:00")
+        self.time = dt_util.parse_datetime("2023-04-11 " + str(hour) + ":00")
         self.description = "Snowy"
-        self.temperature = -5
+        # set the temperature to a negative value, that depends on the hour
+        self.temperature = 10 - hour
 
 
 def create_mock_constructor_standings():
@@ -254,11 +261,11 @@ async def test_async_update_data(hass: HomeAssistant):
             ), "The keys in last_race_info do not match the expected keys."
 
             assert data["next_weekend_weather"] == [
-                ("(2023-04-11) Swedish Grand Prix: Practice 1", "Snowy, -5C°"),
+                ("(2023-04-11) Swedish Grand Prix: Practice 1", "Snowy, -4C°"),
                 ("(2023-04-11) Swedish Grand Prix: Practice 2", "Snowy, -5C°"),
-                ("(2023-04-11) Swedish Grand Prix: Practice 3", "Snowy, -5C°"),
-                ("(2023-04-11) Swedish Grand Prix: Qualifying", "Snowy, -5C°"),
-                ("(2023-04-11) Swedish Grand Prix: Race", "Snowy, -5C°"),
+                ("(2023-04-11) Swedish Grand Prix: Practice 3", "Snowy, -6C°"),
+                ("(2023-04-11) Swedish Grand Prix: Qualifying", "Snowy, -7C°"),
+                ("(2023-04-11) Swedish Grand Prix: Race", "Snowy, -8C°"),
             ]
 
 

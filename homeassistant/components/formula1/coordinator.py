@@ -214,13 +214,13 @@ class F1Coordinator(DataUpdateCoordinator):
         # SETTING THIS TO TRUE WILL SET FAKE DATES IN THE NEXT RACE WEEKEND WEATHER SO WE ACTUALLY GET AN EVENT TO SHOW OFF
         # Should only be used (Set to True) for the presentation/demo on friday 15/12
         # Should also be removed after friday
-        TEST = True
+        fake_dates = True
 
         # Fetch the remaining events (race weekend)
         rem_events = await self.hass.async_add_executor_job(
             fastf1.get_events_remaining,
             dt_util.now().today()
-            if not TEST
+            if not fake_dates
             else dt_util.parse_datetime("2023-6-1 1:00"),
         )
 
@@ -232,46 +232,57 @@ class F1Coordinator(DataUpdateCoordinator):
         next_event = rem_events.iloc[0]
 
         # Get weather at location of event
-        async with python_weather.Client(unit=python_weather.METRIC) as client:
+        async with python_weather.Client(format=python_weather.METRIC) as client:
             weather = await client.get(next_event[["Location"]].item())
 
         # List to be filled with session descriptions and corresponding session weather information
-        sessionsWeather = [None] * 5
+        sessions_weather = [None] * 5
 
         # Go through all sessions for the next event and find the closest forecast
         for i in range(1, 6):
             # Pick out each session's title and date
-            sessionTitle = (
+            session_title = (
                 next_event[["EventName"]].item()
                 + ": "
                 + next_event[["Session" + str(i)]].item()
             )
-            sessionDate = (
+            session_date = (
                 next_event[["Session" + str(i) + "Date"]].item()
-                if not TEST
+                if not fake_dates
                 else dt_util.now().today()
             )
 
             for forecast in weather.forecasts:
-                if forecast.date == sessionDate.date():
-                    best_diff = 1000
+                if forecast.date == session_date.date():
+                    self.find_closest_hourly_forecast(
+                        sessions_weather, i, session_title, session_date, forecast
+                    )
 
-                    for h_forecast in forecast.hourly:
-                        h_min = h_forecast.time.hour * 60 + h_forecast.time.minute
-                        s_min = sessionDate.time().hour * 60 + sessionDate.time().minute
+        return sessions_weather
 
-                        new_diff = abs(h_min - s_min)
+    def find_closest_hourly_forecast(
+        self, sessions_weather, i, session_title, session_date, forecast
+    ):
+        """Find the closest hourly forecast to a session.
 
-                        # Find the forecast closest to the session start time
-                        if new_diff < best_diff:
-                            best_diff = new_diff
+        Pure side-effect function, changes values in the sessions_weather object
+        """
+        best_diff = 1000
 
-                            sessionsWeather[i - 1] = (
-                                "(" + str(sessionDate.date()) + ") " + sessionTitle,
-                                str(h_forecast.description)
-                                + ", "
-                                + str(h_forecast.temperature)
-                                + "C°",
-                            )
+        for h_forecast in forecast.hourly:
+            h_min = h_forecast.time.hour * 60 + h_forecast.time.minute
+            s_min = session_date.time().hour * 60 + session_date.time().minute
 
-        return sessionsWeather
+            new_diff = abs(h_min - s_min)
+
+            # Find the forecast closest to the session start time
+            if new_diff < best_diff:
+                best_diff = new_diff
+
+                sessions_weather[i - 1] = (
+                    "(" + str(session_date.date()) + ") " + session_title,
+                    str(h_forecast.description)
+                    + ", "
+                    + str(h_forecast.temperature)
+                    + "°C",
+                )
