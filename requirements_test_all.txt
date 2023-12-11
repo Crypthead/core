@@ -1602,6 +1602,9 @@ python-tado==0.15.0
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
 
+# homeassistant.components.formula1
+python-weather==1.1.0
+
 # homeassistant.components.tile
 pytile==2023.04.0
 

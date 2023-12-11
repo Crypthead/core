@@ -208,11 +208,13 @@ class F1Coordinator(DataUpdateCoordinator):
         -------
         list with a tuple per session in the coming race weekend:
 
-        [(location and session, weather information)]: [(String, String)]
+        [("(date) location and session", "weather information")]: [(String, String)]
         """
 
         # SETTING THIS TO TRUE WILL SET FAKE DATES IN THE NEXT RACE WEEKEND WEATHER SO WE ACTUALLY GET AN EVENT TO SHOW OFF
-        TEST = False
+        # Should only be used (Set to True) for the presentation/demo on friday 15/12
+        # Should also be removed after friday
+        TEST = True
 
         # Fetch the remaining events (race weekend)
         rem_events = await self.hass.async_add_executor_job(
@@ -247,7 +249,7 @@ class F1Coordinator(DataUpdateCoordinator):
             sessionDate = (
                 next_event[["Session" + str(i) + "Date"]].item()
                 if not TEST
-                else dt_util.parse_datetime("2023-12-10 17:01")
+                else dt_util.now().today()
             )
 
             for forecast in weather.forecasts:

@@ -2179,6 +2179,9 @@ python-telegram-bot==13.1
 # homeassistant.components.vlc
 python-vlc==1.1.2
 
+# homeassistant.components.formula1
+python-weather==1.1.0
+
 # homeassistant.components.egardia
 pythonegardia==1.0.52
 
