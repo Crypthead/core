@@ -1,13 +1,13 @@
 {
   "domain": "formula1",
   "name": "Formula 1",
-  "codeowners": ["@Tango"],
+  "codeowners": [],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/formula1",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["fastf1==3.1.4"],
+  "requirements": ["fastf1==3.1.4", "python-weather==1.1.0"],
   "ssdp": [],
   "zeroconf": []
 }
