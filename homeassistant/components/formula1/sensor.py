@@ -24,6 +24,9 @@ class SensorType(Enum):
     CONSTRUCTOR_STANDINGS = 2  # Sensor shows the standings of the constructor
     LAST_RACE_WINNER = 3  # Sensor shows the winner of the last race
     LAST_RACE_RESULTING_POSITIONS = 4  # Sensor shows the results of the last race
+    UPCOMING_RACE_WEATHER = (
+        5  # Sensor shows weather for the upcoming event (3 days in advance at most)
+    )
 
 
 async def async_setup_entry(
@@ -54,6 +57,11 @@ async def async_setup_entry(
     if entry.data.get("show_last_results", False):
         entities_to_add.append(
             F1Sensor(coordinator, entry, SensorType.LAST_RACE_RESULTING_POSITIONS)
+        )
+
+    if entry.data.get("show_upcoming_race_weather", False):
+        entities_to_add.append(
+            F1Sensor(coordinator, entry, SensorType.UPCOMING_RACE_WEATHER)
         )
 
     if entities_to_add:
@@ -95,6 +103,7 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, which depend on the type of sensor."""
+        attrs = {}  # Results of the method
         self.last_date_changed = self.coordinator.data["last_race_info"]["raceDate"]
 
         # Choose from where and how to extract the information relevant to the given sensor type
@@ -115,21 +124,19 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
                     "familyName"
                 ].iloc[0]
                 return self.coordinator.data["last_race_info"]
+            case SensorType.UPCOMING_RACE_WEATHER:
+                for event_id, weather in self.coordinator.data["weather_data"]:
+                    attrs[event_id] = weather
 
-        attrs = {}  # Results of the method
-        if self.sensor_type in [
-            SensorType.DRIVER_STANDINGS,
-            SensorType.CONSTRUCTOR_STANDINGS,
-        ]:
-            # Populate results
-            for position, standing in data.iterrows():
+        for position, standing in data.iterrows():
+            if self.sensor_type in [
+                SensorType.DRIVER_STANDINGS,
+                SensorType.CONSTRUCTOR_STANDINGS,
+            ]:
                 attrs[f"{position + 1} - {standing[name_column]}"] = standing[
                     result_column
                 ]
-
-        else:
-            # Populate results
-            for position, standing in data.iterrows():
+            else:
                 attrs[position] = standing[name_column]
 
         _LOGGER.debug(
@@ -149,8 +156,8 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
                 return "Formula 1 last race winner"
             case SensorType.LAST_RACE_RESULTING_POSITIONS:
                 return "Formula 1 last race results"
-            case _:
-                return ""
+            case SensorType.UPCOMING_RACE_WEATHER:
+                return "Formula 1 upcoming weather"
 
     @property
     def icon(self) -> str | None:

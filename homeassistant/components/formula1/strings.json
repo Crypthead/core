@@ -9,7 +9,8 @@
           "show_driver_standings": "Add a Sensor for all driver standings in Formula 1",
           "show_constructor_standings": "Add a Sensor for all constructor standings in Formula 1",
           "show_last_winner": "Add a Sensor for the winner of the most recent race in Formula 1",
-          "show_last_results": "Add a Sensor for the standings of the most recent race in Formula 1"
+          "show_last_results": "Add a Sensor for the standings of the most recent race in Formula 1",
+          "show_upcoming_race_weather": "Show the weather for an upcoming event if it is at most 3 days in advance"
         }
       },
       "calendar": {

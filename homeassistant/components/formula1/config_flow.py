@@ -20,7 +20,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("show_last_results", default=True): bool,
         vol.Required("show_last_winner", default=True): bool,
         vol.Required("show_driver_standings", default=True): bool,
-        vol.Required("show_constructor_standings", default=True): bool,
+        vol.Required("show_constructor_standings"): bool,
+        vol.Required("show_upcoming_race_weather"): bool,
     }
 )
 
