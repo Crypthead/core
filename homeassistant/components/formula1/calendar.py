@@ -17,11 +17,6 @@ from .coordinator import F1Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# Need to
-# 1. Get data from coordinator
-# 2. Parse data to calendar events
-# 3. Check that we don't add duplicate events, check if any disappeared
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -31,12 +26,13 @@ async def async_setup_entry(
     """Set up F1 based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
+    # Only add calendar if user has enabled it
     if entry.data["show_calendar"]:
         async_add_entities([Formula1Calendar(coordinator, entry)])
 
 
 class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
-    """Defines a F1 calendar."""
+    """Defines a F1 calendar entity."""
 
     _attr_has_entity_name = True
     _attr_name = "Formula 1 calendar"
@@ -46,6 +42,8 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, entry)
         self._event: CalendarEvent | None = None
+
+        # Only show race events or show all events
         self.only_show_race_event = entry.data["only_show_race_event"]
 
     @property
@@ -77,8 +75,10 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Return calendar events within a datetime range."""
         events: list[CalendarEvent] = []
 
+        # Get the schedule from the coordinator
         schedule = self.coordinator.data["schedule"]
-        # Get all events within the time range
+
+        # Iterate through schedule to get all events within the time range
         for _, race in schedule.iterrows():
             session_dates = race[
                 [
@@ -90,9 +90,11 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                 ]
             ]
 
+            # Iterate through the sessions
             for i, session_ts in enumerate(session_dates.values):
                 session_date = session_ts.to_pydatetime()
 
+                # Check if the session is within the time range
                 if (
                     not pd.isnull(session_ts)
                     and session_date >= start_date
@@ -108,6 +110,7 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                         )
                     )
 
+                # Race events is Session5
                 if self.only_show_race_event:
                     break
 
@@ -115,14 +118,15 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle updated data from the coordinator. Find the next upcoming event."""
 
-        # Find the next upcoming event
+        # Get the schedule from the coordinator
         schedule = self.coordinator.data["schedule"]
 
         event_start = None
         upcoming_event = None
 
+        # Iterate through schedule to get next upcoming event
         for _, race in schedule.iterrows():
             session_dates = race[
                 [
@@ -134,9 +138,11 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                 ]
             ]
 
+            # Iterate through the sessions
             for i, session_ts in enumerate(session_dates.values):
                 session_date = session_ts.to_pydatetime()
 
+                # Check if the session is closer than the current upcoming event
                 if (
                     not pd.isnull(session_ts)
                     and session_date >= dt_util.now()
@@ -151,9 +157,11 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                         location=str(race["Country"]),
                     )
 
+                # Race events is Session5
                 if self.only_show_race_event:
                     break
 
+        # Set the upcoming event
         if upcoming_event is not None:
             self._event = upcoming_event
 
