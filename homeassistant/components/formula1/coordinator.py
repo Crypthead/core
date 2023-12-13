@@ -32,7 +32,7 @@ class F1Coordinator(DataUpdateCoordinator):
 
         Returns
         -------
-        Dictionary containing 5 DataFrames:
+        Dictionary containing 6 DataFrames:
         - schedule
         - driver_standings
         - constructor_standings
