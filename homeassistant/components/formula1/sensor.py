@@ -125,18 +125,22 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
                 ].iloc[0]
                 return self.coordinator.data["last_race_info"]
             case SensorType.UPCOMING_RACE_WEATHER:
-                for event_id, weather in self.coordinator.data["weather_data"]:
+                for event_id, weather in self.coordinator.data["next_weekend_weather"]:
                     attrs[event_id] = weather
 
-        for position, standing in data.iterrows():
-            if self.sensor_type in [
-                SensorType.DRIVER_STANDINGS,
-                SensorType.CONSTRUCTOR_STANDINGS,
-            ]:
+        if self.sensor_type in [
+            SensorType.DRIVER_STANDINGS,
+            SensorType.CONSTRUCTOR_STANDINGS,
+        ]:
+            # Populate results
+            for position, standing in data.iterrows():
                 attrs[f"{position + 1} - {standing[name_column]}"] = standing[
                     result_column
                 ]
-            else:
+
+        else:
+            # Populate results
+            for position, standing in data.iterrows():
                 attrs[position] = standing[name_column]
 
         _LOGGER.debug(

@@ -25,9 +25,9 @@ async def test_correct_sensors_setup(hass: HomeAssistant):
         data={
             "show_driver_standings": True,
             "show_constructor_standings": False,
-            "show_last_winner": True,
-            "show_last_results": True,
-            "show_upcoming_race_weather": False,
+            "show_last_winner": False,
+            "show_last_results": False,
+            "show_upcoming_race_weather": True,
             "name": "Home",
         },
     )
@@ -38,13 +38,13 @@ async def test_correct_sensors_setup(hass: HomeAssistant):
 
     assert entry.state == ConfigEntryState.LOADED
     sensors = hass.states.async_all("sensor")
-    assert len(sensors) == 3
+    assert len(sensors) == 2
 
     assert hass.states.get("sensor.formula_1_drivers_standings") is not None
     assert hass.states.get("sensor.formula_1_constructors_standings") is None
-    assert hass.states.get("sensor.formula_1_last_race_winner") is not None
-    assert hass.states.get("sensor.formula_1_last_race_results") is not None
-    assert hass.states.get("sensor.formula_1_race_weather") is None
+    assert hass.states.get("sensor.formula_1_last_race_winner") is None
+    assert hass.states.get("sensor.formula_1_last_race_results") is None
+    assert hass.states.get("sensor.formula_1_upcoming_weather") is not None
 
 
 async def test_drivers_standings_sensor(hass: HomeAssistant):
@@ -172,6 +172,6 @@ async def test_race_weather_sensor(hass: HomeAssistant):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    hass.states.get("sensor.formula_1_race_weather")
-    # assert state is not None
+    state = hass.states.get("sensor.formula_1_race_weather")
+    assert state is not None
     # assert (0, "Vettel") in state.as_dict()["attributes"].items()
