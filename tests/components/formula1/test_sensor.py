@@ -172,6 +172,9 @@ async def test_race_weather_sensor(hass: HomeAssistant):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.formula_1_race_weather")
+    state = hass.states.get("sensor.formula_1_upcoming_weather")
     assert state is not None
-    # assert (0, "Vettel") in state.as_dict()["attributes"].items()
+    assert (
+        "(2023-12-8) Swedish Grand Prix: Practice 1",
+        "Snowy, -5°C",
+    ) in state.as_dict()["attributes"].items()

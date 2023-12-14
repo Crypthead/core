@@ -138,7 +138,10 @@ class F1Sensor(CoordinatorEntity[F1Coordinator], SensorEntity):
                     result_column
                 ]
 
-        else:
+        elif self.sensor_type in [
+            SensorType.LAST_RACE_WINNER,
+            SensorType.LAST_RACE_RESULTING_POSITIONS,
+        ]:
             # Populate results
             for position, standing in data.iterrows():
                 attrs[position] = standing[name_column]
