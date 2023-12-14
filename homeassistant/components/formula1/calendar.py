@@ -17,11 +17,6 @@ from .coordinator import F1Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# Need to
-# 1. Get data from coordinator
-# 2. Parse data to calendar events
-# 3. Check that we don't add duplicate events, check if any disappeared
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -47,6 +42,8 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator, entry)
         self._event: CalendarEvent | None = None
+
+        # Only show race events or show all events
         self.only_show_race_event = entry.data["only_show_race_event"]
 
     @property

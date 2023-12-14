@@ -249,7 +249,7 @@ class F1Coordinator(DataUpdateCoordinator):
             session_date = (
                 next_event[["Session" + str(i) + "Date"]].item()
                 if not fake_dates
-                else dt_util.now().today()
+                else (dt_util.now().today() + timedelta(days=(i - 1) // 2))
             )
 
             for forecast in weather.forecasts:
