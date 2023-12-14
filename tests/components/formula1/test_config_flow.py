@@ -32,6 +32,7 @@ async def test_form_no_calendar(
             "show_last_winner": False,
             "show_driver_standings": False,
             "show_constructor_standings": True,
+            "show_upcoming_race_weather": False,
         },
     )
     await hass.async_block_till_done()
@@ -45,6 +46,7 @@ async def test_form_no_calendar(
         "show_last_winner": False,
         "show_driver_standings": False,
         "show_constructor_standings": True,
+        "show_upcoming_race_weather": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -67,6 +69,7 @@ async def test_form_with_calendar(
             "show_last_winner": True,
             "show_driver_standings": True,
             "show_constructor_standings": True,
+            "show_upcoming_race_weather": True,
         },
     )
     await hass.async_block_till_done()
@@ -88,6 +91,7 @@ async def test_form_with_calendar(
         "show_last_winner": True,
         "show_driver_standings": True,
         "show_constructor_standings": True,
+        "show_upcoming_race_weather": True,
         "only_show_race_event": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -107,6 +111,7 @@ async def test_form_invalid_input(hass: HomeAssistant) -> None:
             "show_last_winner": False,
             "show_driver_standings": False,
             "show_constructor_standings": False,
+            "show_upcoming_race_weather": False,
         },
     )
 

@@ -25,8 +25,9 @@ async def test_correct_sensors_setup(hass: HomeAssistant):
         data={
             "show_driver_standings": True,
             "show_constructor_standings": False,
-            "show_last_winner": True,
+            "show_last_winner": False,
             "show_last_results": False,
+            "show_upcoming_race_weather": True,
             "name": "Home",
         },
     )
@@ -41,8 +42,9 @@ async def test_correct_sensors_setup(hass: HomeAssistant):
 
     assert hass.states.get("sensor.formula_1_drivers_standings") is not None
     assert hass.states.get("sensor.formula_1_constructors_standings") is None
-    assert hass.states.get("sensor.formula_1_last_race_winner") is not None
+    assert hass.states.get("sensor.formula_1_last_race_winner") is None
     assert hass.states.get("sensor.formula_1_last_race_results") is None
+    assert hass.states.get("sensor.formula_1_upcoming_weather") is not None
 
 
 async def test_drivers_standings_sensor(hass: HomeAssistant):
@@ -56,6 +58,7 @@ async def test_drivers_standings_sensor(hass: HomeAssistant):
             "show_constructor_standings": False,
             "show_last_winner": False,
             "show_last_results": False,
+            "show_upcoming_race_weather": False,
             "name": "Home",
         },
     )
@@ -80,6 +83,7 @@ async def test_constructors_standings_sensor(hass: HomeAssistant):
             "show_constructor_standings": True,
             "show_last_winner": False,
             "show_last_results": False,
+            "show_upcoming_race_weather": False,
             "name": "Home",
         },
     )
@@ -105,6 +109,7 @@ async def test_last_winner_sensor(hass: HomeAssistant):
             "show_constructor_standings": False,
             "show_last_winner": True,
             "show_last_results": False,
+            "show_upcoming_race_weather": False,
             "name": "Home",
         },
     )
@@ -133,6 +138,7 @@ async def test_last_results_sensor(hass: HomeAssistant):
             "show_constructor_standings": False,
             "show_last_winner": False,
             "show_last_results": True,
+            "show_upcoming_race_weather": False,
             "name": "Home",
         },
     )
@@ -144,3 +150,31 @@ async def test_last_results_sensor(hass: HomeAssistant):
     state = hass.states.get("sensor.formula_1_last_race_results")
     assert state is not None
     assert (0, "Vettel") in state.as_dict()["attributes"].items()
+
+
+async def test_race_weather_sensor(hass: HomeAssistant):
+    """Test that the race weather sensor correctly loads the weather from ."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test weather sensor",
+        unique_id="0123456",
+        data={
+            "show_driver_standings": False,
+            "show_constructor_standings": False,
+            "show_last_winner": False,
+            "show_last_results": False,
+            "show_upcoming_race_weather": True,
+            "name": "Home",
+        },
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.formula_1_upcoming_weather")
+    assert state is not None
+    assert (
+        "(2023-12-8) Swedish Grand Prix: Practice 1",
+        "Snowy, -5°C",
+    ) in state.as_dict()["attributes"].items()

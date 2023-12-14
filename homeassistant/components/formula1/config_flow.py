@@ -21,6 +21,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required("show_last_winner", default=True): bool,
         vol.Required("show_driver_standings", default=True): bool,
         vol.Required("show_constructor_standings", default=True): bool,
+        vol.Required("show_upcoming_race_weather", default=True): bool,
     }
 )
 
@@ -42,6 +43,7 @@ async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> dict[str, An
         or data["show_constructor_standings"]
         or data["show_last_winner"]
         or data["show_last_results"]
+        or data["show_upcoming_race_weather"]
     ):
         raise ValueError("Must select at least one type of information to show")
 
