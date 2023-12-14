@@ -6,6 +6,7 @@ import logging
 import fastf1
 from fastf1.ergast import Ergast
 import python_weather
+import datetime as dt
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
@@ -249,7 +250,7 @@ class F1Coordinator(DataUpdateCoordinator):
             session_date = (
                 next_event[["Session" + str(i) + "Date"]].item()
                 if not fake_dates
-                else dt_util.now().today()
+                else (dt_util.now().today() + dt.timedelta(days=(i-1)//2))
             )
 
             for forecast in weather.forecasts:
