@@ -105,14 +105,24 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
                             event_name=str(race["EventName"]),
                             session=str(race["Session" + str(5 - i)]),
                             round_num=str(race["RoundNumber"]),
-                            start_date=session_date,
-                            location=str(race["Country"]),
+                            start_date=dt_util.now(),
+                            location="Nowhere",
                         )
                     )
 
                 # Race events is Session5
                 if self.only_show_race_event:
                     break
+
+        events = [
+            self._create_calendar_event(
+                event_name="Demo Grand Prix",
+                session="Race",
+                round_num="1",
+                start_date=dt_util.now() + timedelta(minutes=30),
+                location="Nowhere",
+            )
+        ]
 
         return events
 
@@ -164,6 +174,14 @@ class Formula1Calendar(CoordinatorEntity[F1Coordinator], CalendarEntity):
         # Set the upcoming event
         if upcoming_event is not None:
             self._event = upcoming_event
+
+        self._event = self._create_calendar_event(
+            event_name="Demo Grand Prix",
+            session="Race",
+            round_num="1",
+            start_date=dt_util.now() + timedelta(minutes=30),
+            location="Nowhere",
+        )
 
         super()._handle_coordinator_update()
 
