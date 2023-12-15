@@ -5,6 +5,7 @@ import logging
 
 import fastf1
 from fastf1.ergast import Ergast
+import pandas as pd
 import python_weather
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -55,7 +56,35 @@ class F1Coordinator(DataUpdateCoordinator):
 
             last_race_info = await self._get_last_race_info()
 
-            next_weekend_weather = await self._get_weather_next_race_weekend()
+            # next_weekend_weather = await self._get_weather_next_race_weekend()
+
+            new_row = [
+                22,
+                "Scandinavian Grand Prix",
+                "Sweden",
+                "Gotland",
+                "Practice 1",
+                pd.Timestamp(year=2023, month=12, day=15, hour=11, tz="CET"),
+                "Practice 2",
+                pd.Timestamp(year=2023, month=12, day=15, hour=14, tz="CET"),
+                "Practice 3",
+                pd.Timestamp(year=2023, month=12, day=16, hour=12, tz="CET"),
+                "Qualifying",
+                pd.Timestamp(year=2023, month=12, day=16, hour=16, tz="CET"),
+                "Race",
+                pd.Timestamp(year=2023, month=12, day=17, hour=17, tz="CET"),
+            ]
+
+            # Add the list of values to the DataFrame
+            schedule.loc[len(schedule)] = new_row
+
+            mock_weather_next_race = [
+                ("(2023-12-15) Swedish Grand Prix: Practice 1", "Snowy, -5°C"),
+                ("(2023-12-15) Swedish Grand Prix: Practice 2", "Snowy, -4°C"),
+                ("(2023-12-16) Swedish Grand Prix: Practice 3", "Snowy, -3°C"),
+                ("(2023-12-16) Swedish Grand Prix: Qualifying", "Snowy, -2°C"),
+                ("(2023-12-17) Swedish Grand Prix: Race", "Snowy, -1°C"),
+            ]
 
             data_dict = {
                 "schedule": schedule,
@@ -63,7 +92,7 @@ class F1Coordinator(DataUpdateCoordinator):
                 "constructor_standings": constructor_standings,
                 "last_race_results": last_race_results,
                 "last_race_info": last_race_info,
-                "next_weekend_weather": next_weekend_weather,
+                "next_weekend_weather": mock_weather_next_race,
             }
 
             _LOGGER.info("Successfully fetched Formula 1 data")
